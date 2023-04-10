@@ -1,0 +1,51 @@
+<div *ngIf="initDone">
+  <i
+    *ngIf="userService.selUser != userService.curUser"
+    class="fa fa-undo reset-icon float-right"
+    aria-hidden="true"
+    (click)="clearSelection()"
+    placement="left"
+    ngbTooltip="Reset user selection"
+  >
+  </i>
+  <div
+    ngbDropdown
+    (clickOutside)="filterOptionsVal = ''; dropDown.close()"
+    (openChange)="dropDownOpenChange($event)"
+    #dropDown='ngbDropdown'
+    [autoClose]="false"
+    class="float-right"
+  >
+    <button
+      class="btn btn-sm d-inline-block"
+      ngbDropdownToggle
+    >
+      <span class="sel-val-label">
+        {{ userService.selUser ? userService.selUser.userName : userService.curUser.userName }}
+      </span>
+      <i class="fa fa-angle-down sel-val-label"></i>
+    </button>
+    <div ngbDropdownMenu class="dropdown">
+      <input
+        #searchInput
+        maxlength="40"
+        type="text"
+        [(ngModel)]="filterOptionsVal"
+        #ctrl="ngModel"
+        placeholder="Search"
+      >
+      <div #dropDownItems class="dropdown-items">
+        <button
+          id="user_selection_{{ user.userAccount }}"
+          class="dropdown-item"
+          *ngFor="let user of userService.activeUsers | objectFilter: 'userName' : filterOptionsVal?(filterOptionsVal) : null : 'CONTAINS'"
+          (click)="userService.selUser=user; filterOptionsVal=''; dropDown.close()"
+          [ngClass]="{'dropdown-item-active' : userService.selUser.userAccount===user.userAccount}"
+        >
+          {{ user.userName }}
+        </button>
+      </div>
+    </div>
+  </div>
+  <label *ngIf="showLabel" class="sel-label float-right">View/Request As:</label>
+</div>

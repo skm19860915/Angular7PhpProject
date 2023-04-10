@@ -1,0 +1,267 @@
+<div class="container">
+  <div class="row-fluid">
+    <div *ngIf="selectedAssignments.length > 0" class="combobox-container">
+      <app-action-drop-down
+        [actionDropDownName]="'Action'"
+        [actionList]="actionList"
+        [selectionCount]="selectedAssignments.length"
+        [selectedItemNameSin]="'assignment'"
+        [selectedItemNamePlu]="'assignments'"
+        (clearSelectionCallback)="clearSelection()"
+        (actionCallback)="executeAction($event)">
+      </app-action-drop-down>
+    </div>
+    <div class="combobox-container">
+      <app-filter-drop-down
+        #statusFilter
+        [filterName]="'Status'"
+        [defaultVal]="'AWAITING ADMIN'"
+        [filterOptionList]="assignmentService.statusList"
+        (filterActiveCallback)="clearSelection(); statusFilterUpdate($event)"
+        (filterClearCallback)="clearSelection(); statusFilterUpdate($event)">
+      </app-filter-drop-down>
+    </div>
+    <div class="combobox-container">
+      <app-filter-drop-down
+        #userFilter
+        [showSearchBar]='true'
+        [filterName]="'User'"
+        [filterOptionList]="userService.users"
+        [filterDisplayKey]="'userName'"
+        [optionValDisplayKey]="'userName'"
+        (filterActiveCallback)="clearSelection(); assignedToByUserFilterUpdate($event)"
+        (filterClearCallback)="clearSelection(); assignedToByUserFilterUpdate($event)">
+      </app-filter-drop-down>
+    </div>
+    <div class="combobox-container">
+      <app-filter-drop-down
+        #eventFilter
+        [filterName]="'Event'"
+        [filterOptionList]="assignmentService.ticketAssignmentEvents"
+        [filterDisplayKey]="'EventDescription'"
+        [optionTitleDisplayKey]="'EventDescription'"
+        [optionTitleIsDate]="0"
+        [optionValDisplayKey]="'EventDateTime'"
+        [optionValIsDate]="1"
+        (filterActiveCallback)="clearSelection()"
+        (filterClearCallback)="clearSelection()">
+      </app-filter-drop-down>
+    </div>
+    <table class="table table-hover">
+      <thead>
+        <th scope="col" class="table-header-action-item table-cell-sel-all">
+          <i class="fa fa-check-circle-o selected-all-table-icon" (click)="selectAll()"></i>
+        </th>
+        <th scope="col">Event #</th>
+        <th scope="col">Event Information</th>
+        <th scope="col">Assigned To</th>
+        <!-- <th scope="col">Requested By</th> -->
+        <th scope="col">Request Date</th>
+        <th scope="col">Assigned Date</th>
+        <th scope="col">Status</th>
+        <!-- <th scope="col">Current Status Date</th> -->
+        <th scope="col">Delivery Type</th>
+        <th scope="col">Delivery Email Address</th>
+        <th scope="col">Seat Type</th>
+        <th scope="col">Section/Row/Seat</th>
+        <!-- <th scope="col">Section</th>
+        <th scope="col">Row</th>
+        <th scope="col">Seat</th> -->
+        <th scope="col">Usage Reason</th>
+        <th scope="col">Client Matter Number</th>
+        <th scope="col">Guest Name</th>
+        <th scope="col">Guest Company</th>
+        <th scope="col"><!-- Details Btn--></th>
+      </thead>
+      <tbody class="table-content-sm">
+        <tr
+          *ngFor="
+            let assignment of assignmentService.ticketAssignments |
+            objectFilter: 'GuestAssociatedFirmAttorney' : userFilter.filterVal?(userFilter.filterVal.userAccount) : null : 'EQUALS' |
+            objectFilter: 'Status' : statusFilter.filterVal?(statusFilter.filterVal) : null : 'EQUALS' |
+            objectFilter: 'EventNumber' : eventFilter.filterVal?(eventFilter.filterVal.EventNumber) : null : 'EQUALS' |
+            paginate: { itemsPerPage: 10, currentPage: pageNbr }; let i = index"
+          (click)="selectAssignment(assignment.AssignmentNumber)">
+          <td>
+            <i class="fa selected-table-icon"
+              [ngClass]="{'fa-lock': assignment.Status=='CANCELLED', 'fa-check-circle-o': assignment.Status!='CANCELLED', 'fa-disabled': !selectedAssignments.includes(assignment.AssignmentNumber) }"></i>
+          </td>
+          <td>{{ assignment.AssignmentNumber }}</td>
+          <td>
+            {{ assignment.EventDescription }}<br>{{ assignment.EventDateTime.date.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y, h:mm a' }}
+          </td>
+          <td>{{ assignment.GuestAssociatedFirmAttorney }}</td>
+          <!-- <td>{{ assignment.RequestedBy}}</td> -->
+          <td>{{ assignment.RequestDateTime.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y, h:mm a' }}</td>
+          <td>{{ assignment.stepInitialCreatedDateTime.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y, h:mm a' }}
+          </td>
+          <td>{{ assignment.Status }}</td>
+          <!-- <td>
+            <ng-container *ngIf="assignment.currentStepDateTime">
+              {{ assignment.currentStepDateTime.date.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y, h:mm a' }}
+            </ng-container>
+          </td> -->
+          <td>{{ assignment.AssociatedTicketDeliveryType }}</td>
+          <td>{{ assignment.GuestEmail}}</td>
+          <td>{{ assignment.AssociatedSeatType }}</td>
+          <td>{{ assignment.Section }} / {{ assignment.Row }} / {{ assignment.Seat }}</td>
+          <!-- <td>{{ assignment.Section }}</td>
+          <td>{{ assignment.Row }}</td>
+          <td>{{ assignment.Seat }}</td> -->
+          <td>{{ assignment.AssociatedReasonCode }}</td>
+          <td>{{ assignment.ClientMatter }}</td>
+          <td>{{ assignment.GuestName }}</td>
+          <td>{{ assignment.GuestCompany }}</td>
+          <td>
+            <button
+            type="button"
+            class="btn btn-sm btn-secondary"
+            (click)="selectAssignmentForDetails(assignment.AssignmentNumber);
+            openModal('assignmentDetailsModal',
+            assignmentDetailsModalObj);
+            ">
+              Details
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <pagination-controls autoHide="true" (pageChange)="pageNbr = $event"></pagination-controls>
+  </div>
+  <!-- Transfer Modal -->
+  <ng-template #transferModalObj let-c="close" let-d="dismiss">
+    <div class="modal-header">
+      <div class="col">
+        <div class="row">
+          <h4 class="modal-title" id="guestDetailsModalLabel">Transfer
+            {{ selectedAssignments.length>1?("Tickets"): "Ticket" }}
+          </h4>
+          <button type="button" class="close" (click)="transferModal.close()" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-body transfer-user-modal">
+      <div class="container">
+        <div class="transfer-modal-user-selection">
+          Select the user to which you want to transfer the {{ selectedAssignments.length>1?("tickets"): "ticket" }}
+          below:
+          <br><br>
+          <div>
+            <app-transfer-user-drop-down
+              (selectOptionCallback)='transferPreSelection($event)'>
+            </app-transfer-user-drop-down>
+          </div>
+        </div>
+        <table class="table table-sm table-striped table-transfer-tickets">
+          <thead>
+            <th scope="col">#</th>
+            <th scope="col">Assigned To</th>
+            <th scope="col">Requested By</th>
+            <th scope="col">Status</th>
+            <th scope="col">Event Information</th>
+            <th scope="col">Delivery Email Address</th>
+            <th scope="col">Seat Type</th>
+            <th scope="col">Section</th>
+            <th scope="col">Row</th>
+            <th scope="col">Seat</th>
+          </thead>
+          <tbody class="table-content-sm">
+            <tr *ngFor="let i of selectedAssignments">
+              <td>{{ assignmentService.ticketAssignments[getAssignmentIndex(i)].AssignmentNumber }}</td>
+              <td>{{ assignmentService.ticketAssignments[getAssignmentIndex(i)].GuestAssociatedFirmAttorney }}</td>
+              <td>{{ assignmentService.ticketAssignments[getAssignmentIndex(i)].RequestedBy}}</td>
+              <td>{{ assignmentService.ticketAssignments[getAssignmentIndex(i)].Status }}</td>
+              <td>
+                {{ assignmentService.ticketAssignments[getAssignmentIndex(i)].EventDescription }}<br>{{ assignmentService.ticketAssignments[getAssignmentIndex(i)].EventDateTime.date.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y, h:mm a' }}
+              </td>
+              <td>{{ assignmentService.ticketAssignments[getAssignmentIndex(i)].GuestEmail }}</td>
+              <td>{{ assignmentService.ticketAssignments[getAssignmentIndex(i)].AssociatedSeatType }}</td>
+              <td>{{ assignmentService.ticketAssignments[getAssignmentIndex(i)].Section }}</td>
+              <td>{{ assignmentService.ticketAssignments[getAssignmentIndex(i)].Row }}</td>
+              <td>{{ assignmentService.ticketAssignments[getAssignmentIndex(i)].Seat }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="transferModal.close()">Close</button>
+      <button type="button" class="btn btn-primary" appNoDblClick [disabled]="!transferUserSelected" (click)="transfer()">
+        Transfer {{ selectedAssignments.length>1?("Tickets"): "Ticket" }}
+      </button>
+    </div>
+  </ng-template>
+  <!-- Assignment Details Modal (Desktop/Mobile) -->
+  <ng-template #assignmentDetailsModalObj let-c="close" let-d="dismiss">
+    <div class="modal-header">
+      <div class="col">
+        <div class="row">
+          <h4 class="modal-title" id="guestDetailsModalLabel">
+            Assignment Details ({{assignmentService.ticketAssignments[selAssignmentForDetailsIndex].AssignmentNumber}})
+          </h4>
+          <button type="button" class="close" (click)="clearSelection(); assignmentDetailsModal.close()" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-body transfer-user-modal">
+      <span class="badge badge-secondary">{{ assignmentService.ticketAssignments[selAssignmentForDetailsIndex].Status }}</span>
+      <br/><br/>
+      <p class="details-modal-entry">
+        <b>Assigned To:</b><br>
+        {{ assignmentService.ticketAssignments[selAssignmentForDetailsIndex].GuestAssociatedFirmAttorney }}
+      </p>
+      <p class="details-modal-entry">
+        <b>Requested By:</b><br>
+        {{ assignmentService.ticketAssignments[selAssignmentForDetailsIndex].RequestedBy }}
+      </p>
+      <p class="details-modal-entry">
+        <b>Requested Date:</b><br>
+        {{ assignmentService.ticketAssignments[selAssignmentForDetailsIndex].RequestDateTime.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y, h:mm a' }}
+      </p>
+      <p class="details-modal-entry">
+        <b>Assigned Date:</b><br>
+        {{ assignmentService.ticketAssignments[selAssignmentForDetailsIndex].stepInitialCreatedDateTime.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y, h:mm a' }}
+      </p>
+      <p class="details-modal-entry">
+        <b>Current Status Date:</b><br>
+        {{ assignmentService.ticketAssignments[selAssignmentForDetailsIndex].currentStepDateTime.date.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y, h:mm a' }}
+      </p>
+      <p class="details-modal-entry">
+        <b>Event Information:</b><br>
+        {{ assignmentService.ticketAssignments[selAssignmentForDetailsIndex].EventDescription }}
+        <br/>
+        {{ assignmentService.ticketAssignments[selAssignmentForDetailsIndex].EventDateTime.date.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y, h:mm a' }}
+      </p>
+      <p class="details-modal-entry">
+        <b>Delivery Type:</b><br>
+        {{ assignmentService.ticketAssignments[selAssignmentForDetailsIndex].AssociatedTicketDeliveryType }}
+      </p>
+      <p class="details-modal-entry">
+        <b>Delivery Email Address:</b><br>
+        {{ assignmentService.ticketAssignments[selAssignmentForDetailsIndex].GuestEmail || 'Nothing' }}
+      </p>
+      <p class="details-modal-entry">
+        <b>Seat Type:</b><br>
+        {{ assignmentService.ticketAssignments[selAssignmentForDetailsIndex].AssociatedSeatType }}
+      </p>
+      <p class="details-modal-entry">
+        <b>Section / Row / Seat</b><br>
+        {{ assignmentService.ticketAssignments[selAssignmentForDetailsIndex].Section }} /
+        {{ assignmentService.ticketAssignments[selAssignmentForDetailsIndex].Row }} /
+        {{ assignmentService.ticketAssignments[selAssignmentForDetailsIndex].Seat }}
+      </p>
+      <p *ngIf="assignmentService.ticketAssignments[selAssignmentForDetailsIndex].AssignmentNotes" class="details-modal-entry">
+        <b>Assignment Notes:</b><br>
+        {{ assignmentService.ticketAssignments[selAssignmentForDetailsIndex].AssignmentNotes }}
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="clearSelection(); assignmentDetailsModal.close()">Close</button>
+    </div>
+  </ng-template>
+
+</div>

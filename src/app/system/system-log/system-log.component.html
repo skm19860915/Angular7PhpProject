@@ -1,0 +1,45 @@
+<div class="row-fluid content">
+  <button type="button" class="btn btn-danger float-right action-btn" (click)="resetSystemLog()">
+    <i class="fa fa-trash"></i> &nbsp;Reset System Log
+  </button>
+  <div class="combobox-container float-left">
+    <app-filter-drop-down #actionFilter [filterName]="'Action'" [filterOptionList]="logService.actionTypes"
+      [menuPlacement]="'bottom-left'">
+    </app-filter-drop-down>
+  </div>
+  <div class="combobox-container float-left">
+    <div class="input-group mb-3">
+      <div class="input-group-prepend">
+        <span class="input-group-text" id="input-icon"><i class="fa fa-filter"></i></span>
+      </div>
+      <input maxlength="40" type="text" class="form-control" name="filterByActionDescription"
+        [(ngModel)]="filterByActionDescription" placeholder="Action Description" aria-labelledby="input-icon">
+      &nbsp;<i *ngIf="filterByActionDescription.length>0" class="fa fa-times filter-clear-i"
+        (click)="filterByActionDescription=''" aria-hidden="true"></i>
+    </div>
+  </div>
+  <table class="table table-hover">
+    <thead>
+      <th scope="col">#</th>
+      <th style="width: 16%" scope="col">Date</th>
+      <th style="width: 10%" scope="col">Created By</th>
+      <th style="width: 18%" scope="col">Action</th>
+      <th scope="col">Action Description</th>
+    </thead>
+    <tbody class="table-content-sm">
+      <tr *ngFor="
+        let entry of logService.entries | 
+        objectTextFilter: 'ActionDescription' : filterByActionDescription | 
+        objectFilter: 'Action' : actionFilter.filterVal?(actionFilter.filterVal) : null : 'EQUALS' | 
+        paginate: { itemsPerPage: 10, currentPage: pageNbr }; 
+        let i = index">
+        <td>{{ entry.entryNumber }}</td>
+        <td>{{ entry.entryDate.date.replace(" ", "T") | date:'M/d/y h:mm:ss:SSS a' }}</td>
+        <td>{{ entry.entryCreatedBy }}</td>
+        <td>{{ entry.Action }}</td>
+        <td>{{ entry.ActionDescription }}</td>
+      </tr>
+    </tbody>
+  </table>
+  <pagination-controls autoHide="true" (pageChange)="pageNbr = $event"></pagination-controls>
+</div>

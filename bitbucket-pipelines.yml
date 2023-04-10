@@ -1,0 +1,35 @@
+# This is a sample build configuration for JavaScript.
+# Check our guides at https://confluence.atlassian.com/x/14UWN for more examples.
+# Only use spaces to indent your .yml configuration.
+# -----
+# You can specify a custom docker image from Docker Hub as your build environment.
+# - curl https://raw.githubusercontent.com/git-ftp/git-ftp/master/git-ftp > git-ftp
+#               - chmod 755 git-ftp
+#               - export PATH=".:$PATH"
+#               - git-ftp --version
+#               - git ftp init --user $FTP_USERNAME --passwd $FTP_PASSWORD ftp://k-powered.net/webseiten/mailme
+image: trion/ng-cli
+
+pipelines:
+  custom:
+    deployment-to-live:
+        - step:
+            name: Run ng build for live system
+            caches:
+              - node
+            script:
+              - npm install
+              - ng build --configuration live --output-hashing=all --aot
+        - step:
+            name: Deploy to live system
+            deployment: test
+            # trigger: manual
+            script:
+              - curl https://raw.githubusercontent.com/git-ftp/git-ftp/master/git-ftp > git-ftp
+              - chmod 755 git-ftp
+              - export PATH=".:$PATH"
+              - git-ftp --version
+              - cd $BUILD_DIR
+              - dir
+              #- git config git-ftp.syncroot /dist
+              #- git ftp push --user $FTP_USERNAME --passwd $FTP_PASSWORD ftp:///ticketing.huntinglake.com/

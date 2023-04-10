@@ -1,0 +1,184 @@
+<div class="container">
+  <div class="row-fluid">
+    <div *ngIf="selectedRequests.length > 0" class="combobox-container">
+      <app-action-drop-down
+        [actionDropDownName]="'Action'"
+        [actionList]="actionList"
+        [selectionCount]="selectedRequests.length"
+        [selectedItemNameSin]="'request'"
+        [selectedItemNamePlu]="'requests'"
+        (clearSelectionCallback)="clearSelection()"
+        (actionCallback)="executeAction($event)">
+      </app-action-drop-down>
+    </div>
+    <div class="combobox-container">
+      <app-filter-drop-down
+        #statusFilter
+        [filterName]="'Status'"
+        [defaultVal]="'SUBMITTED/PENDING'"
+        [filterOptionList]="requestService.statusList"
+        (filterActiveCallback)="clearSelection(); statusFilterUpdate($event)"
+        (filterClearCallback)="clearSelection(); statusFilterUpdate($event)">
+      </app-filter-drop-down>
+    </div>
+    <div class="combobox-container">
+      <app-filter-drop-down
+        #requestedByFilter
+        [showSearchBar]='true'
+        [filterName]="'Requested By'"
+        [filterOptionList]="userService.users"
+        [filterDisplayKey]="'userName'"
+        [optionValDisplayKey]="'userName'"
+        (filterActiveCallback)="clearSelection(); requestedByFilterUpdate($event)"
+        (filterClearCallback)="clearSelection(); requestedByFilterUpdate($event)">
+      </app-filter-drop-down>
+    </div>
+    <div class="combobox-container">
+      <app-filter-drop-down
+        #eventFilter
+        [filterName]="'Event'"
+        [filterOptionList]="requestService.ticketRequestEvents"
+        [filterDisplayKey]="'EventDescription'"
+        [optionTitleDisplayKey]="'EventDescription'"
+        [optionTitleIsDate]="0"
+        [optionValDisplayKey]="'EventDateTime'"
+        [optionValIsDate]="1"
+        (filterActiveCallback)="clearSelection()"
+        (filterClearCallback)="clearSelection()">
+      </app-filter-drop-down>
+    </div>
+    <table class="table table-hover">
+      <thead>
+        <th scope="col" class="table-header-action-item table-cell-sel-all">
+          <i class="fa fa-check-circle-o selected-all-table-icon" (click)="selectAll()"></i>
+        </th>
+        <th scope="col">Event #</th>
+        <th scope="col">Event Information</th>
+        <!-- <th scope="col">Created By</th> -->
+        <th scope="col">Requested By</th>
+        <th scope="col">Request Date</th>
+        <th scope="col">Request Status</th>
+        <!-- <th scope="col">Delivery Type</th> -->
+        <th scope="col">Delivery Email Address</th>
+        <th scope="col">Section/Row/Seat</th>
+        <!-- <th scope="col">Section</th>
+        <th scope="col">Row</th>
+        <th scope="col">Seat</th> -->
+        <th scope="col">Usage Reason</th>
+        <th scope="col">Client Matter Number</th>
+        <th scope="col">Guest Name</th>
+        <th scope="col">Guest Company</th>
+        <th scope="col"><!-- Details Btn--></th>
+      </thead>
+      <tbody class="table-content-sm">
+        <tr *ngFor="
+          let request of requestService.ticketRequests |
+          objectFilter: 'RequestedBy' : requestedByFilter.filterVal?(requestedByFilter.filterVal.userAccount) : null : 'EQUALS' |
+          objectFilter: 'statusOfTicketRequest' : statusFilter.filterVal?(statusFilter.filterVal) : null : 'EQUALS' |
+          objectFilter: 'EventNumber' : eventFilter.filterVal?(eventFilter.filterVal.EventNumber) : null : 'EQUALS' |
+          paginate: { itemsPerPage: 10, currentPage: pageNbr }; let i = index"
+          (click)="selectRequest(request.RequestNumber)"
+        >
+            <td>
+              <i class="fa fa-check-circle-o selected-table-icon" [ngClass]="{'fa-disabled': !selectedRequests.includes(request.RequestNumber)}"></i>
+            </td>
+            <td>{{ request.RequestNumber }}</td>
+            <td>{{ request.EventDescription }}<br>{{ request.EventDateTime.date.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y, h:mm a' }}</td>
+            <!-- <td>{{ request.CreatedBy }}</td> -->
+            <td>{{ request.RequestedBy }}</td>
+            <td>{{ request.CreatedDateTime.date.replace(" ", "T").split(".")[0] | date:'M/d/y, h:mm a' }}</td>
+            <td>{{ request.statusOfTicketRequest }}</td>
+            <!-- <td>{{ request.AssociatedTicketDeliveryType }}</td> -->
+            <td>{{ request.GuestEmail }}</td>
+            <td>{{ request.Section }} / {{ request.Row }} / {{ request.Seat }}</td>
+            <!-- <td>{{ request.Section }}</td>
+            <td>{{ request.Row }}</td>
+            <td>{{ request.Seat }}</td> -->
+            <td>{{ request.ReasonCode }}</td>
+            <td>{{ request.ClientMatter }}</td>
+            <td>{{ request.GuestName }}</td>
+            <td>{{ request.GuestCompany }}</td>
+            <td>
+              <button
+              type="button"
+              class="btn btn-sm btn-secondary"
+              (click)="selectRequestForDetails(request.RequestNumber);
+              openModal('requestDetailsModal',
+              requestDetailsModalObj);
+              ">
+                Details
+              </button>
+            </td>
+        </tr>
+      </tbody>
+    </table>
+    <pagination-controls autoHide="true" (pageChange)="pageNbr = $event"></pagination-controls>
+  </div>
+  <!-- Request Details Modal (Desktop/Mobile) -->
+  <ng-template #requestDetailsModalObj let-c="close" let-d="dismiss">
+    <div class="modal-header">
+      <div class="col">
+        <div class="row">
+          <h4 class="modal-title" id="guestDetailsModalLabel">
+            Request Details ({{requestService.ticketRequests[selRequestForDetailsIndex].RequestNumber}})
+          </h4>
+          <button type="button" class="close" (click)="clearSelection(); requestDetailsModal.close()" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-body transfer-user-modal">
+      <span class="badge badge-secondary">{{ requestService.ticketRequests[selRequestForDetailsIndex].statusOfTicketRequest }}</span>
+      <br/><br/>
+      <p class="details-modal-entry">
+        <b>Created By:</b><br>
+        {{ requestService.ticketRequests[selRequestForDetailsIndex].CreatedBy }}
+      </p>
+      <p class="details-modal-entry">
+        <b>Requested By:</b><br>
+        {{ requestService.ticketRequests[selRequestForDetailsIndex].RequestedBy }}
+      </p>
+      <p class="details-modal-entry">
+        <b>Creation Date:</b><br>
+        {{ requestService.ticketRequests[selRequestForDetailsIndex].CreatedDateTime.date.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y, h:mm a' }}
+      </p>
+      <p class="details-modal-entry">
+        <b>Event Information:</b><br>
+        {{ requestService.ticketRequests[selRequestForDetailsIndex].EventDescription }}
+        <br/>
+        {{ requestService.ticketRequests[selRequestForDetailsIndex].EventDateTime.date.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y, h:mm a' }}
+      </p>
+      <p class="details-modal-entry">
+        <b>Delivery Type:</b><br>
+        {{ requestService.ticketRequests[selRequestForDetailsIndex].AssociatedTicketDeliveryType }}
+      </p>
+      <p class="details-modal-entry">
+        <b>Delivery Email Address:</b><br>
+        {{ requestService.ticketRequests[selRequestForDetailsIndex].GuestEmail || 'Nothing' }}
+      </p>
+      <p class="details-modal-entry">
+        <b>Seat Type:</b><br>
+        {{ requestService.ticketRequests[selRequestForDetailsIndex].AssociatedSeatType }}
+      </p>
+      <p class="details-modal-entry">
+        <b>Section / Row / Seat</b><br>
+        {{ requestService.ticketRequests[selRequestForDetailsIndex].Section }} /
+        {{ requestService.ticketRequests[selRequestForDetailsIndex].Row }} /
+        {{ requestService.ticketRequests[selRequestForDetailsIndex].Seat }}
+      </p>
+      <p class="details-modal-entry">
+        <b>Reason Code:</b><br>
+        {{ requestService.ticketRequests[selRequestForDetailsIndex].ReasonCode }}
+      </p>
+      <p *ngIf="requestService.ticketRequests[selRequestForDetailsIndex].RequestNotes" class="details-modal-entry">
+        <b>Request Notes:</b><br>
+        {{ requestService.ticketRequests[selRequestForDetailsIndex].RequestNotes }}
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="clearSelection(); requestDetailsModal.close()">Close</button>
+    </div>
+  </ng-template>
+
+</div>

@@ -1,0 +1,15 @@
+<ng-template #editIcon>
+  <i class="fa fa-edit cell-icon-sm"></i>
+</ng-template>
+<div>
+  <div [ngClass]="{'hidden': !editing}">
+    <input #inputElement [required]="required" (blur)="onBlur($event)" [name]="value" [(ngModel)]="value" [placeholder]="placeholder" />
+  </div>
+  <div *ngIf="!editing">
+    <a href="#" (click)="beginEdit(value)" (focus)="beginEdit(value)">
+      <ng-container *ngIf="value && value != ''; else editIcon">
+        {{ value }}
+      </ng-container>
+    </a>
+  </div>
+</div>

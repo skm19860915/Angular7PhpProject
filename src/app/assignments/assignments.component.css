@@ -1,0 +1,53 @@
+.transfer-user-modal {
+  text-align: center;
+  padding: 30px 0 30px 0;
+}
+
+.modal-assignment-status {
+  padding-bottom: 10px;
+}
+
+.badge {
+  margin-bottom: 20px;
+}
+
+.btn-info {
+  background-color: #186ba0;
+  border-color: #186ba0;
+}
+
+.btn-info:hover {
+  background-color: #155b86;
+  border-color: #155b86;
+}
+
+@media(min-width: 768px) {
+  
+  .main-content {
+    padding: 180px 0 30px 15px;
+    font-size: 90%;
+    max-width: 1000px;
+  }
+}
+
+@media(max-width: 767px) {
+
+  .main-content {
+    padding: 85px 0 13px 15px;
+  }
+
+  .mobile-action-btn {
+    position: fixed;
+    bottom: 45px;
+    right: 0px;
+    z-index: 900;
+    background-color: #c1c1c1;
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+    padding: 10px;
+  }
+
+  .btn-mobile-margin {
+    margin-left: 10px;
+  }
+}

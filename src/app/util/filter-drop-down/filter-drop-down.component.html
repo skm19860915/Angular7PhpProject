@@ -1,0 +1,33 @@
+<div (clickOutside)="filterOptionsVal = ''; dropDown.close()" ngbDropdown #dropDown='ngbDropdown' [autoClose]="false"
+  class="d-inline-block" placement="{{ menuPlacement?(menuPlacement) : 'bottom-right' }}">
+  <button [ngClass]="{ 'active': filterVal }" class="btn btn-sm" ngbDropdownToggle>
+    <i class="fa fa-filter"></i>
+    {{ filterVal ? (filterDisplayKey ? (filterVal[filterDisplayKey]) : filterVal) : filterName }}
+    <i *ngIf="filterVal" class="fa fa-times" (click)="clearFilter()">
+    </i>
+  </button>
+  <div ngbDropdownMenu class="dropdown">
+    <input *ngIf="showSearchBar" maxlength="40" type="text" [(ngModel)]="filterOptionsVal" #ctrl="ngModel"
+      placeholder="Search">
+    <div *ngIf="optionValDisplayKey !== undefined" class="dropdown-items">
+      <button ngbDropdownItem class="dropdown-item"
+        *ngFor="let option of filterOptionList | objectFilter: optionValDisplayKey : filterOptionsVal?(filterOptionsVal) : null : 'CONTAINS'"
+        (click)="filterVal=option; activateFilter(); filterOptionsVal=''; dropDown.close()"
+        [ngClass]="{'dropdown-item-active' : filterVal==option}">
+        <strong *ngIf="optionTitleDisplayKey">{{ option[optionTitleDisplayKey] }}<br /></strong>
+        {{ 
+          optionValIsDate ? (option[optionValDisplayKey].date.replace(" ", "T").split(".")[0] | date: 'EEEE, M/d/y, h:mm a') 
+            : option[optionValDisplayKey]
+        }}
+      </button>
+    </div>
+    <div *ngIf="optionValDisplayKey === undefined" class="dropdown-items">
+      <button ngbDropdownItem class="dropdown-item"
+        *ngFor="let option of filterOptionList | optionFilter : filterOptionsVal?(filterOptionsVal) : null : 'CONTAINS'"
+        (click)="filterVal=option; activateFilter(); dropDown.close()"
+        [ngClass]="{'dropdown-item-active' : filterVal==option}">
+        {{ option }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,382 @@
+<div class="container">
+  <div class="row-fluid table-top-bar">
+    <button type="button" class="btn btn-secondary float-right"
+      (click)="openModal('newTemplateModal', newTemplateModalObj)">
+      Add Template
+    </button>
+  </div>
+  <table class="table">
+    <thead>
+      <th scope="col">Template Name</th>
+      <th scope="col">Venue</th>
+      <th scope="col">Ticket Category</th>
+      <th scope="col">Tickets</th>
+      <th scope="col">
+        <!--Action buttons -->
+      </th>
+    </thead>
+    <tbody>
+      <tr *ngFor="
+          let template of ticketTemplateService.ticketTemplates |
+          paginate: { itemsPerPage: maxPages, currentPage: pageNbr }; let i = index">
+        <td>{{ template.TicketTemplateName }}</td>
+        <td>{{ venueService.getVenueName(template.AssociatedVenueNumber) }}</td>
+        <td>{{ template.AssociatedTicketCategory }}</td>
+        <td>{{ template.tickets.length }}</td>
+        <td class="cell-align-right">
+          <button type="button" class="btn btn-sm btn-primary btn-margin-right-15" (click)="editTemplate(getAbsoluteIndex(pageNbr, maxPages, i))">
+            Edit
+          </button>
+          <button type="button" class="btn btn-sm btn-danger"
+            (click)="deleteTicketTemplate(getAbsoluteIndex(pageNbr, maxPages, i))">
+            Delete
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <pagination-controls autoHide="true" (pageChange)="pageNbr = $event"></pagination-controls>
+
+  <!-- New Templates Modal -->
+  <ng-template #newTemplateModalObj let-c="close" let-d="dismiss">
+    <div class="modal-header">
+      <div class="col">
+        <div class="row">
+          <h4 class="modal-title">Add New Template</h4>
+          <button type="button" class="close" aria-label="Close" (click)="discardTemplate(); newTemplateModal.close()">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="row">
+          <div class="form-group form-margin-top">
+            <input focus="true" [formControl]="modalTemplateNameFormCtrl" type="text" class="form-control" maxlength="40"
+              placeholder="Enter Template Name">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="row ml-1 row-template-main-values">
+        <div class="form-group">
+          <label>Venue</label>
+          <div>
+            <div #venueDropdown="ngbDropdown" ngbDropdown class="d-inline-block" placement="bottom-left">
+              <button class="btn btn-sm btn-custom-details btn-modal-event-info" id="dropdownStatus" ngbDropdownToggle>
+                {{ selVenue? selVenue.Name: "Select Venue" }}
+              </button>
+              <div ngbDropdownMenu aria-labelledby="dropdownUseReason" class="dropdown-window-adjusted">
+                <button ngbDropdownItem class="dropdown-item" *ngFor="let venue of venueService.venues; let i = index"
+                  (click)="selectVenueForTemplate(venue); venueDropdown.close()">
+                  {{ venue.Name }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group btn-margin-left-15">
+          <label>Ticket Category</label>
+          <div>
+            <div #categoryDropdown="ngbDropdown" ngbDropdown class="d-inline-block" placement="bottom-left">
+              <button class="btn btn-sm btn-custom-details btn-modal-event-info" id="dropdownCategory" ngbDropdownToggle>
+                {{ modalTemplate.AssociatedTicketCategory?(modalTemplate.AssociatedTicketCategory): "Select Ticket Category" }}
+              </button>
+              <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+                <button ngbDropdownItem class="dropdown-item" *ngFor="let category of eventService.eventCategories"
+                  (click)="selectCategoryForTemplate(category.Category); categoryDropdown.close()">
+                  {{ category.Category }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="container-add-btn-modal ml-auto mr-3">
+          <button type="button" class="btn btn-secondary" (click)="addTicketToTemplate()">
+            Add Ticket
+          </button>
+        </div>
+      </div>
+      <span *ngIf="modalTemplate.tickets.length>1" (click)="preFillActive=!preFillActive"
+        [ngClass]="{'inactive': !preFillActive}" class="badge badge-primary prefill-badge" placement="top"
+        ngbTooltip="Ticket details of all tickets are linked with first ticket.">
+        Autofill active
+      </span>
+      <span *ngIf="modalTemplate.tickets.length>1" class="float-right">
+        <small>
+          {{ modalTemplate.tickets.length }} {{ modalTemplate.tickets.length>1 ? 'Tickets' : 'Ticket' }}
+        </small>
+      </span>
+      <table class="table table-sm table-striped table-add-template-modal">
+        <thead>
+          <th>
+            <!-- Remove ticket -->
+          </th>
+          <th class="cell-centered table-col-h-sm">Auto Approve</th>
+          <th class="cell-centered table-col-h-sm">Available To</th>
+          <th class="cell-centered table-col-h-sm">Delivery Type</th>
+          <th class="cell-centered table-col-h-sm">Seat Type</th>
+          <th class="cell-centered table-col-h-sm">Section</th>
+          <th class="cell-centered table-col-h-sm">Row</th>
+          <th class="cell-centered table-col-h-sm">Seat</th>
+        </thead>
+        <tbody *ngIf="modalTemplate.tickets" class="table-content-sm">
+          <tr
+            *ngFor="
+            let ticket of modalTemplate.tickets |
+            paginate: { id: 'pagination_ticket_list', itemsPerPage: maxTemplateTicketsPages, currentPage: templateTicketsPageNbr }; let i = index;">
+            <td class="cell-centered">
+              <i *ngIf="getAbsoluteIndex(templateTicketsPageNbr, maxTemplateTicketsPages, i) != 0"
+                class="fa fa-minus-square-o del-ticket-icon clickable-icon" aria-hidden="true"
+                (click)="removeTicket(getAbsoluteIndex(templateTicketsPageNbr, maxTemplateTicketsPages, i))"></i>
+            </td>
+            <td class="cell-centered cell-icon">
+              <i (click)="ticket.AutoApprove = !ticket.AutoApprove; ticketDetailInputChange(ticket.AutoApprove, i, 'AutoApprove')"
+                class="fa fa-check user-table-action" [ngStyle]="{'opacity': ticket.AutoApprove ? '1':'0.2'}">
+              </i>
+            </td>
+            <td class="cell-centered">
+              <div>
+                <div #availableToDropdown="ngbDropdown" ngbDropdown class="d-inline-block" placement="bottom-left">
+                  <button class="btn btn-sm drop-down-table-cell" id="dropdownCategory" ngbDropdownToggle>
+                    {{ ticket.AvailableTo ? ticket.AvailableTo : "Select" }}
+                  </button>
+                  <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+                    <button ngbDropdownItem class="dropdown-item" *ngFor="let group of userService.userGroups"
+                      (click)="ticket.AvailableTo = group; ticketDetailInputChange(group, i, 'AvailableTo'); availableToDropdown.close()">
+                      {{ group }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="cell-centered">
+              <div>
+                <div #deliveryTypeDropdown="ngbDropdown" ngbDropdown class="d-inline-block" placement="bottom-left">
+                  <button class="btn btn-sm drop-down-table-cell" id="dropdownCategory" ngbDropdownToggle>
+                    {{ ticket.AssociatedDeliveryType ? ticket.AssociatedDeliveryType : "Select" }}
+                  </button>
+                  <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+                    <button ngbDropdownItem class="dropdown-item"
+                      *ngFor="let deliveryType of ticketService.ticketDeliveryTypes"
+                      (click)="ticket.AssociatedDeliveryType=deliveryType.DeliveryType; ticketDetailInputChange(deliveryType.DeliveryType, i, 'AssociatedDeliveryType'); deliveryTypeDropdown.close()">
+                      {{ deliveryType.DeliveryType }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="cell-centered">
+              <div>
+                <div #seatTypeDropdown="ngbDropdown" ngbDropdown class="d-inline-block" placement="bottom-left">
+                  <button class="btn btn-sm drop-down-table-cell" id="dropdownCategory" ngbDropdownToggle>
+                    {{ ticket.AssociatedSeatType ? ticket.AssociatedSeatType : "Select" }}
+                  </button>
+                  <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+                    <button ngbDropdownItem class="dropdown-item" *ngFor="let seatType of ticketService.seatTypes"
+                      (click)="ticket.AssociatedSeatType = seatType.SeatType; ticketDetailInputChange(seatType.SeatType, i, 'AssociatedSeatType'); seatTypeDropdown.close()">
+                      {{ seatType.SeatType }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="cell-centered">
+              <app-inline-edit [(ngModel)]="ticket.Section" type="text"
+                (input)="ticketDetailInputChange($event.target.value, i, 'Section')">
+              </app-inline-edit>
+            </td>
+            <td class="cell-centered">
+              <app-inline-edit [(ngModel)]="ticket.Row" type="text"
+                (input)="ticketDetailInputChange($event.target.value, i, 'Row')">
+              </app-inline-edit>
+            </td>
+            <td class="cell-centered">
+              <app-inline-edit [(ngModel)]="ticket.Seat" type="text"
+                (input)="ticketDetailInputChange($event.target.value, i, 'Seat')">
+              </app-inline-edit>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <pagination-controls class="modal-pagination" previousLabel="" nextLabel="" autoHide="true" responsive="true"
+        (pageChange)="templateTicketsPageNbr = $event" id='pagination_ticket_list'>
+      </pagination-controls>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary"
+        (click)="discardTemplate(); newTemplateModal.close()">Discard</button>
+      <button type="button" class="btn btn-primary" appNoDblClick (click)="addTemplate()">Add Template</button>
+    </div>
+  </ng-template>
+
+  <!-- Edit Templates Modal -->
+  <ng-template #editTemplateModalObj let-c="close" let-d="dismiss">
+    <div class="modal-header">
+      <div class="col">
+        <div class="row">
+          <h4 class="modal-title">Edit Template</h4>
+          <button type="button" class="close" aria-label="Close" (click)="discardTemplate(); editTemplateModal.close()">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="row">
+          <div class="form-group form-margin-top">
+            <input [formControl]="modalTemplateNameFormCtrl" type="text" class="form-control" maxlength="40"
+              placeholder="Enter Template Name">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="row ml-1 row-template-main-values">
+        <div class="form-group">
+          <label>Venue</label>
+          <div>
+            <div ngbDropdown class="d-inline-block" placement="bottom-left">
+              <button class="btn btn-sm btn-custom-details btn-modal-event-info" id="dropdownStatus" ngbDropdownToggle>
+                {{ selVenue? selVenue.Name: "Select Venue" }}
+              </button>
+              <div ngbDropdownMenu aria-labelledby="dropdownUseReason" class="dropdown-window-adjusted">
+                <button ngbDropdownItem class="dropdown-item" *ngFor="let venue of venueService.venues; let i = index"
+                  (click)="selectVenueForTemplate(venue)">
+                  {{ venue.Name }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group btn-margin-left-15">
+          <label>Ticket Category</label>
+          <div>
+            <div ngbDropdown class="d-inline-block" placement="bottom-left">
+              <button class="btn btn-sm btn-custom-details btn-modal-event-info" id="dropdownCategory" ngbDropdownToggle>
+                {{ modalTemplate.AssociatedTicketCategory?(modalTemplate.AssociatedTicketCategory): "Select Ticket Category" }}
+              </button>
+              <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+                <button ngbDropdownItem class="dropdown-item" *ngFor="let category of eventService.eventCategories"
+                  (click)="selectCategoryForTemplate(category.Category)">
+                  {{ category.Category }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="container-add-btn-modal ml-auto mr-3">
+          <button type="button" class="btn btn-secondary" (click)="addTicketToTemplate()">
+            Add Ticket
+          </button>
+        </div>
+      </div>
+      <span *ngIf="modalTemplate.tickets.length>1" (click)="preFillActive=!preFillActive"
+        [ngClass]="{'inactive': !preFillActive}" class="badge badge-primary prefill-badge" placement="top"
+        ngbTooltip="Ticket details of all tickets are linked with first ticket.">
+        Autofill active
+      </span>
+      <span *ngIf="modalTemplate.tickets.length>1" class="float-right">
+        <small>
+          {{ modalTemplate.tickets.length }} {{ modalTemplate.tickets.length>1 ? 'Tickets' : 'Ticket' }}
+        </small>
+      </span>
+      <table class="table table-sm table-striped table-add-template-modal">
+        <thead>
+          <th>
+            <!-- Remove ticket -->
+          </th>
+          <th class="cell-centered table-col-h-sm">Auto Approve</th>
+          <th class="cell-centered table-col-h-sm">Available To</th>
+          <th class="cell-centered table-col-h-sm">Delivery Type</th>
+          <th class="cell-centered table-col-h-sm">Seat Type</th>
+          <th class="cell-centered table-col-h-sm">Section</th>
+          <th class="cell-centered table-col-h-sm">Row</th>
+          <th class="cell-centered table-col-h-sm">Seat</th>
+        </thead>
+        <tbody *ngIf="modalTemplate.tickets" class="table-content-sm">
+          <tr
+            *ngFor="
+            let ticket of modalTemplate.tickets |
+            paginate: { id: 'pagination_ticket_list', itemsPerPage: maxTemplateTicketsPages, currentPage: templateTicketsPageNbr }; let i = index;">
+            <td class="cell-centered">
+              <i *ngIf="getAbsoluteIndex(templateTicketsPageNbr, maxTemplateTicketsPages, i) != 0"
+                class="fa fa-minus-square-o del-ticket-icon clickable-icon" aria-hidden="true"
+                (click)="removeTicket(getAbsoluteIndex(templateTicketsPageNbr, maxTemplateTicketsPages, i))"></i>
+            </td>
+            <td class="cell-centered cell-icon">
+              <i (click)="ticket.AutoApprove = !ticket.AutoApprove; ticketDetailInputChange(ticket.AutoApprove, i, 'AutoApprove')"
+                class="fa fa-check user-table-action" [ngStyle]="{'opacity': ticket.AutoApprove ? '1':'0.2'}">
+              </i>
+            </td>
+            <td class="cell-centered">
+              <div>
+                <div ngbDropdown class="d-inline-block" placement="bottom-left">
+                  <button class="btn btn-sm drop-down-table-cell" id="dropdownCategory" ngbDropdownToggle>
+                    {{ ticket.AvailableTo ? ticket.AvailableTo : "Select" }}
+                  </button>
+                  <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+                    <button ngbDropdownItem class="dropdown-item" *ngFor="let group of userService.userGroups"
+                      (click)="ticket.AvailableTo = group; ticketDetailInputChange(group, i, 'AvailableTo')">
+                      {{ group }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="cell-centered">
+              <div>
+                <div ngbDropdown class="d-inline-block" placement="bottom-left">
+                  <button class="btn btn-sm drop-down-table-cell" id="dropdownCategory" ngbDropdownToggle>
+                    {{ ticket.AssociatedDeliveryType ? ticket.AssociatedDeliveryType : "Select" }}
+                  </button>
+                  <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+                    <button ngbDropdownItem class="dropdown-item"
+                      *ngFor="let deliveryType of ticketService.ticketDeliveryTypes"
+                      (click)="ticket.AssociatedDeliveryType=deliveryType.DeliveryType; ticketDetailInputChange(deliveryType.DeliveryType, i, 'AssociatedDeliveryType')">
+                      {{ deliveryType.DeliveryType }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="cell-centered">
+              <div>
+                <div ngbDropdown class="d-inline-block" placement="bottom-left">
+                  <button class="btn btn-sm drop-down-table-cell" id="dropdownCategory" ngbDropdownToggle>
+                    {{ ticket.AssociatedSeatType ? ticket.AssociatedSeatType : "Select" }}
+                  </button>
+                  <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+                    <button ngbDropdownItem class="dropdown-item" *ngFor="let seatType of ticketService.seatTypes"
+                      (click)="ticket.AssociatedSeatType = seatType.SeatType; ticketDetailInputChange(seatType.SeatType, i, 'AssociatedSeatType')">
+                      {{ seatType.SeatType }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="cell-centered">
+              <app-inline-edit [(ngModel)]="ticket.Section" type="text"
+                (input)="ticketDetailInputChange($event.target.value, i, 'Section')">
+              </app-inline-edit>
+            </td>
+            <td class="cell-centered">
+              <app-inline-edit [(ngModel)]="ticket.Row" type="text"
+                (input)="ticketDetailInputChange($event.target.value, i, 'Row')">
+              </app-inline-edit>
+            </td>
+            <td class="cell-centered">
+              <app-inline-edit [(ngModel)]="ticket.Seat" type="text"
+                (input)="ticketDetailInputChange($event.target.value, i, 'Seat')">
+              </app-inline-edit>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <pagination-controls class="modal-pagination" previousLabel="" nextLabel="" autoHide="true" responsive="true"
+        (pageChange)="templateTicketsPageNbr = $event" id='pagination_ticket_list'>
+      </pagination-controls>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary"
+        (click)="discardTemplate(); editTemplateModal.close()">Discard</button>
+      <button type="button" class="btn btn-primary" appNoDblClick (click)="updateTemplate()">Update Template</button>
+    </div>
+  </ng-template>
+</div>

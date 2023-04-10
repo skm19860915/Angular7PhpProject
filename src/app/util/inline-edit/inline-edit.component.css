@@ -1,0 +1,12 @@
+a {
+  color: #212529;
+}
+
+input {
+  max-width: 70px;
+  padding: 1px 5px;
+}
+
+.hidden {
+  display: none;
+}

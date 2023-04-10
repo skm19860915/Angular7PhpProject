@@ -1,0 +1,44 @@
+.table-top-bar {
+    margin: 25px 0 0 0;
+    padding-bottom: 60px;
+  }
+  
+  .table-add-template-modal {
+    margin-top: 10px;
+  }
+  
+  .container-add-btn-modal {
+    padding-top: 32px;
+  }
+  
+  .drop-down-table-cell {
+    padding: 0;
+  }
+  
+  .prefill-badge {
+    margin: 0px 0 10px 0;
+  }
+  
+  .row-template-main-values {
+    margin: 0 0 10px 0;
+  }
+  
+  /* Pagination Module */
+  .modal-pagination /deep/ .ngx-pagination {
+    margin-bottom: 2rem;
+    margin-top: 1rem;
+    text-align: center;
+    padding: 0;
+    font-size: 80%;
+  }
+  
+  .modal-pagination /deep/ .current {
+    /* background: #006140 !important; */
+    background: #004278 !important;
+  }
+  
+  .del-ticket-icon {
+    margin-top: 7px;
+    font-size: 19px;
+  }
+  

@@ -1,0 +1,112 @@
+<div class="container">
+  <div class="row-fluid">
+    <div *ngIf="selectedRequests.length > 0" class="combobox-container">
+      <app-action-drop-down
+        [actionDropDownName]="'Action'"
+        [actionList]="actionList"
+        [selectionCount]="selectedRequests.length"
+        [selectedItemNameSin]="'request'"
+        [selectedItemNamePlu]="'requests'"
+        (clearSelectionCallback)="clearSelection()"
+        (actionCallback)="executeAction($event)">
+      </app-action-drop-down>
+    </div>
+    <div class="combobox-container">
+      <app-filter-drop-down
+        #statusFilter
+        [filterName]="'Status'"
+        [defaultVal]="'SUBMITTED'"
+        [filterOptionList]="requestService.statusList"
+        (filterActiveCallback)="clearSelection(); statusFilterUpdate($event)"
+        (filterClearCallback)="clearSelection(); statusFilterUpdate($event)">
+      </app-filter-drop-down>
+    </div>
+    <div class="combobox-container">
+      <app-filter-drop-down
+        #requestedByFilter
+        [showSearchBar]='true'
+        [filterName]="'Requested By'"
+        [filterOptionList]="userService.users"
+        [filterDisplayKey]="'userName'"
+        [optionValDisplayKey]="'userName'"
+        (filterActiveCallback)="clearSelection(); requestedByFilterUpdate($event)"
+        (filterClearCallback)="clearSelection(); requestedByFilterUpdate($event)">
+      </app-filter-drop-down>
+    </div>
+    <table class="table table-hover">
+      <thead>
+        <th scope="col" class="table-header-action-item table-cell-sel-all">
+          <i class="fa fa-check-circle-o selected-all-table-icon" (click)="selectAll()"></i>
+        </th>
+        <th scope="col">#</th>
+        <th scope="col">Created By</th>
+        <th scope="col">Requested By</th>
+        <th scope="col">Request Date</th>
+        <th scope="col">Request Status</th>
+        <th scope="col">Title</th>
+        <th scope="col">
+          <!--Open Btn-->
+        </th>
+      </thead>
+      <tbody class="table-content-sm">
+        <tr *ngFor="
+          let request of requestService.specialTicketRequests |
+          objectFilter: 'RequestedBy' : requestedByFilter.filterVal?(requestedByFilter.filterVal.userAccount) : null : 'EQUALS' |
+          objectFilter: 'Status' : statusFilter.filterVal?(statusFilter.filterVal) : null : 'EQUALS' |
+          paginate: { itemsPerPage: 10, currentPage: pageNbr }; let i = index"
+          (click)="selectRequest(request.SpecialRequestNumber)"
+        >
+          <td>
+            <i class="fa fa-check-circle-o selected-table-icon"
+              [ngClass]="{'fa-disabled': !selectedRequests.includes(request.SpecialRequestNumber)}"></i>
+          </td>
+          <td>{{ request.SpecialRequestNumber }}</td>
+          <td>{{ request.CreatedBy }}</td>
+          <td>{{ request.RequestedBy }}</td>
+          <td>{{ request.RequestDateTime.date.replace(" ", "T").split(".")[0] | date:'M/d/y, h:mm a' }}</td>
+          <td>{{ request.Status }}</td>
+          <td>{{ request.RequestTitle }}</td>
+          <td (click)="selectRequest(request.SpecialRequestNumber); openModal('requestDetailsModal', requestDetailsModalObj);">
+            <i class="fa fa-folder-open" aria-hidden="true"></i>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <pagination-controls autoHide="true" (pageChange)="pageNbr = $event"></pagination-controls>
+  </div>
+  <ng-template #requestDetailsModalObj let-c="close" let-d="dismiss">
+    <div class="modal-header">
+      <div class="col">
+        <div class="row">
+          <h5 class="modal-title">Special Request Details</h5>
+          <button type="button" class="d-none d-md-block close" (click)="requestDetailsModal.close()" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <span class="badge badge-secondary">{{ requestService.specialTicketRequests[selectedRequestIndex].Status }}</span>
+      <p class="details-modal-entry">
+        <b>Title:</b><br>
+        {{ requestService.specialTicketRequests[selectedRequestIndex].RequestTitle }}
+      <p class="details-modal-entry">
+        <b class="add-info-title">Description:</b><br><br>
+        <span class="multiline-text">
+          {{ requestService.specialTicketRequests[selectedRequestIndex].RequestDescription }}
+        </span>
+      </p>
+      <p class="details-modal-entry">
+        <b class="add-info-title">Requested By:</b><br>
+        {{ requestService.specialTicketRequests[selectedRequestIndex].RequestedBy }}
+      </p>
+      <p class="details-modal-entry">
+        <b class="add-info-title">Request Date:</b><br>
+        {{ requestService.specialTicketRequests[selectedRequestIndex].RequestDateTime.date.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y, h:mm a' }}
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="requestDetailsModal.close()">Close</button>
+    </div>
+  </ng-template>
+</div>

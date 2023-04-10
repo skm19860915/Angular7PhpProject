@@ -1,0 +1,297 @@
+.dropdown-request-as {
+	left: auto !important;
+  right: -1px;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.top-nav-bar {
+  z-index: 1050;
+}
+
+.header-security-roles {
+	margin-right: 6px;
+}
+
+.header-user-container {
+	font-size: 90%;
+}
+
+:host >>> .dropdown-item:active {
+  background-color: #036b60 !important;
+  border-color: #036b60 !important;
+}
+
+/* Pagination Module */
+:host >>> .ngx-pagination {
+  margin-bottom: 2rem;
+  margin-top: 1rem;
+  text-align: center;
+  padding: 0;
+}
+
+:host >>> .ngx-pagination .current {
+  /* background: #006140 !important;  */
+  background: #004278 !important; 
+}
+
+.user-profile-link {
+	color: white;
+	text-decoration: none;
+}
+
+.user-profile-link:hover {
+	color: #d3d3d3;
+}
+
+.header-user-container small {
+	font-size: 80%;
+}
+
+.navbar-brand img {
+  width: 50px;
+  height: 50px;
+  margin-right: 10px;
+  position: relative;
+  top: -2px;
+  border-radius: 100%;
+}
+
+.navbar-toggler-user-icon {
+  width: 56px;
+  height: 40px;
+}
+
+.navbar-user-menu {
+  padding: 15px 0 0 11px;
+}
+
+.user-selection-row {
+  margin: 7px 0 0 0;
+}
+
+.btn-sm {
+  font-size: 90%;
+}
+
+label {
+  margin-right: 9px;
+  padding-top: 5px;
+}
+
+.bg-custom {
+    /* background-color: #006140; */
+    background-color: #004378;
+    color: #fbfbfb;
+}
+
+.navbar-brand {
+    color: #fbfbfb;
+}
+
+a.navbar-brand:focus {
+	color: #fbfbfb;
+}
+
+a.navbar-brand:hover {
+	color: #d3d3d3;
+}
+
+.nav-link {
+	margin: 0 10px 0 10px;
+}
+
+.nav-link.active {
+  font-weight: 600;
+}
+
+.col-copyright {
+	text-align: left;
+}
+
+.footer {
+	bottom: 0;
+	width: 100%;
+	height: 30px;
+	line-height: 30px;
+	/* background-color: #006140; */
+  background-color: #004278;
+  text-align: right;
+	border-top: 1px solid #ededed;
+	color: #ededed;
+}
+
+.footer a {
+  color: #ededed;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  color: #d3d3d3;
+}
+
+.footer a:active {
+  color: #adadad;
+}
+
+/* Custom Design For Modal */
+.list-group-item {
+	font-size: 90%;
+}
+
+.list-group-item.active {
+	background-color: #438e5e;
+	border-color: #3b7751;
+}
+
+/* For displaying entry "page" */
+#overlay {
+	position: fixed; 
+	width: 100%; 
+	height: 100%; 
+	top: 0; 
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgb(248, 249, 250);
+	z-index: 1051;
+	cursor: pointer;
+}
+
+.imageWHLogo {
+  margin-bottom: 40px;
+  max-width:100%;
+  max-height:100%;
+}
+
+@media(max-width: 767px) {
+
+  #overlay-text{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    font-size: 115%;
+    color: rgb(31, 31, 31);
+    transform: translate(-50%,-50%);
+    -ms-transform: translate(-50%,-50%);
+    text-align: center;
+  }
+
+  .user-selection-row {
+    margin: 0 0 20px 0;
+  }
+
+  .sel-user-indicator {
+    position: fixed;
+    top: 38px;
+    right: 55px;
+    z-index: 1031;
+    color: #91c6be;
+  }
+
+  .main-menu {
+    border-top: 1px solid #dee2e6;
+    padding-top: 5px;
+    font-weight: 100;
+  }
+
+  .mobile-second-navbar {
+    width: 100%;
+    margin: 9px 0 0 0;
+    font-weight: 100;
+  }
+
+  .second-top-navbar {
+    /*overflow-y: scroll;
+    position: fixed;*/
+    margin-bottom: 28px;
+    padding: 9px 10px 0px 10px;
+  }
+
+  .navbar-brand img {
+    width: 25px;
+    height: 25px;
+  }
+
+  .bg-light {
+    /* background-color: #006140!important; */
+    background-color: #004278!important;
+  }
+
+  .navbar-brand {
+    font-size: 110%
+  }
+
+  .top-nav-bar {
+    display: none;
+  }
+
+  .navbar-item-light {
+    color: white !important;
+  }
+
+  .navbar-user-menu { 
+    color: white;
+  }
+
+  .nav-link {
+    margin: 0 10px 5px 10px;
+  }
+
+  /* Pagination Module */
+  :host >>> .ngx-pagination {
+    font-size: 90%;
+    margin-right: 20px;
+  }
+
+  /* <html> remains full width on small screens */
+  :host >>> .row {
+    margin-right: 0px;
+  }
+
+  :host >>> .customized-grid-row {
+    margin-right: -15px;
+  }
+
+  :host >>> .ui-widget {
+    font-size: 105%;
+  }
+
+  .bottom-links-icon-xs {
+    font-size: 120%;
+  }
+
+  .footer {
+    padding: 0 11px 0 25px;
+  }
+}
+
+@media(min-width: 768px) {
+
+  #overlay-text{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    font-size: 140%;
+    color: rgb(31, 31, 31);
+    transform: translate(-50%,-50%);
+    -ms-transform: translate(-50%,-50%);
+    text-align: center;
+  }
+
+  .footer {
+    padding: 0 30px 0 30px;
+  }
+
+  .second-top-navbar {
+    margin-top: 77px;
+  }
+
+  .navbar-dark .navbar-nav .nav-link {
+    color: #495057;
+  }
+
+  .bottom-links {
+    margin-right: 15px;
+  }
+}

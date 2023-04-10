@@ -1,0 +1,50 @@
+.add-user-btn {
+  margin-bottom: 20px;
+}
+
+.combobox-container {
+  margin: 0 15px 0 0;
+  font-size: 0.9em;
+  height: 35px;
+}
+
+.filter-clear-i {
+  position: relative;
+  top: 8px;
+  left: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.filter-clear-i:hover {
+  color: #495057;
+}
+
+.fa-filter {
+  color: black;
+}
+
+input {
+  font-size: 0.9rem;
+  height: 35px;
+}
+
+.input-group-text {
+  font-size: 0.9rem;
+  height: 35px;
+}
+
+.new-user-credential-container {
+  cursor: pointer;
+  font-size: 120%;
+  padding-top: 5px;
+  color: #575b5f;
+}
+
+.form-control {
+  width: auto;
+}
+
+.content {
+  padding-top: 1.25rem;
+}

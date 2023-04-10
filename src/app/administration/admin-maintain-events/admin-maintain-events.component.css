@@ -1,0 +1,76 @@
+.combobox-container {
+  margin: 0 15px 0 0;
+}
+
+.new-event-approval-container {
+  cursor: pointer;
+  font-size: 140%;
+  margin-left: 5px;
+}
+
+.table-top-bar {
+  margin: 25px 0 0 0;
+  padding-bottom: 60px;
+}
+
+.form-group-calendar-input {
+  border-left: 0px !important;
+}
+
+.calendar-input-invalid {
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+  padding: 2.1% 0 2.4% 0;
+}
+
+/deep/ .ui-inputtext {
+  padding: .375rem .75rem;
+  font-size: 1rem;
+  width: 300px;
+  display: block;
+  color: #495057;
+}
+
+/deep/ p-calendar.ng-dirty.ng-invalid > .ui-calendar > .ui-inputtext {
+  border-left: 5px solid #a94442 !important;
+  border-bottom-color: #d6d6d6;
+}
+
+/deep/ .swal-text {
+  font-size: 15px;
+  text-align: left;
+  line-height: 190%;
+}
+
+/deep/ .swal-modal {
+  width: 60%;
+}
+
+/deep/ .swal-title:not(:last-child) {
+  margin-bottom: 20px;
+}
+
+.col-seperator {
+  border-right: 1px solid #d9d9d9;
+}
+
+.modal-pagination /deep/ .ngx-pagination {
+  margin-bottom: 2rem;
+  margin-top: 1rem;
+  text-align: center;
+  padding: 0;
+  font-size: 80%;
+}
+
+.modal-pagination /deep/ .current {
+  background: #004278 !important;
+}
+
+.list-group-item.active {
+  background-color: #004278;
+  border-color: #004278;
+}
+
+.event-heading {
+  margin-bottom: 5px;
+}

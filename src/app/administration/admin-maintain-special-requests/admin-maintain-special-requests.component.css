@@ -1,0 +1,40 @@
+.combobox-container {
+  float: right;
+  margin: 0 0 15px 15px;
+}
+
+.combobox-container i {
+  color: #838383;
+  cursor: pointer;
+}
+
+.combobox-container i:hover {
+  color: #a5a5a5;
+}
+
+.fa-folder-open {
+  font-size: 150%;
+  cursor: pointer;
+}
+
+.fa-folder-open:hover {
+  color: grey;
+}
+
+.badge {
+  margin-bottom: 20px;
+}
+
+/deep/ .swal-text {
+  font-size: 15px;
+  text-align: left;
+  line-height: 190%;
+}
+
+/deep/ .swal-modal {
+  min-width: 700px;
+}
+
+/deep/ .swal-title:not(:last-child) {
+  margin-bottom: 20px;
+}

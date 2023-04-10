@@ -1,0 +1,141 @@
+<div class="container">
+  <div class="row-fluid table-top-bar">
+    <button type="button" class="btn btn-secondary float-right"
+      (click)="openModal('newTemplateModal', newTemplateModalObj)">
+      Add Template
+    </button>
+  </div>
+  <table class="table">
+    <thead>
+      <th scope="col">Template Name</th>
+      <th scope="col">Events</th>
+    </thead>
+    <tbody>
+      <tr *ngFor="
+          let template of eventTemplateService.eventTemplates |
+          paginate: { itemsPerPage: maxPages, currentPage: pageNbr }; let i = index">
+        <td>{{ template.EventTemplateName }}</td>
+        <td>{{ template.events.length }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <pagination-controls autoHide="true" (pageChange)="pageNbr = $event"></pagination-controls>
+
+  <!-- New Templates Modal -->
+  <ng-template #newTemplateModalObj let-c="close" let-d="dismiss">
+    <div class="modal-header">
+      <div class="col">
+        <div class="row">
+          <h4 class="modal-title">Add New Event Template</h4>
+          <button type="button" class="close" aria-label="Close" (click)="discardTemplate(); newTemplateModal.close()">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="row">
+          <div class="form-group form-margin-top">
+            <input focus="true" [formControl]="modalTemplateNameFormCtrl" type="text" class="form-control" maxlength="40"
+              placeholder="Enter Template Name">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="row ml-1 row-template-main-values">
+        <div class="container-add-btn-modal ml-auto mr-3">
+          <button type="button" class="btn btn-secondary" (click)="addEventToTemplate()">
+            Add Event
+          </button>
+        </div>
+      </div>
+      <table class="table table-sm table-striped table-add-template-modal">
+        <thead>
+          <th>
+            <!-- Remove event -->
+          </th>
+          <th class="cell-centered table-col-h-sm">Status</th>
+          <th class="cell-centered table-col-h-sm">Category</th>
+          <th class="cell-centered table-col-h-sm">Venue</th>
+          <th class="cell-centered table-col-h-sm">Title/Description</th>
+          <th class="cell-centered table-col-h-sm">Date and Time</th>
+        </thead>
+        <tbody *ngIf="modalTemplate.events" class="table-content-sm">
+          <tr
+            *ngFor="
+            let event of modalTemplate.events |
+            paginate: { id: 'pagination_event_list', itemsPerPage: maxTemplateEventsPages, currentPage: templateEventsPageNbr }; let i = index;">
+            <td class="cell-centered">
+              <i *ngIf="getAbsoluteIndex(templateEventsPageNbr, maxTemplateEventsPages, i) != 0"
+                class="fa fa-minus-square-o del-ticket-icon clickable-icon" aria-hidden="true"
+                (click)="removeEvent(getAbsoluteIndex(templateEventsPageNbr, maxTemplateEventsPages, i))"></i>
+            </td>
+            <td class="cell-centered">
+              <div>
+                <div #statusDropdown="ngbDropdown" ngbDropdown class="d-inline-block" placement="bottom-left">
+                  <button class="btn btn-sm drop-down-table-cell" id="dropdownCategory" ngbDropdownToggle>
+                    {{ event.Status ? event.Status : "Select" }}
+                  </button>
+                  <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+                    <button ngbDropdownItem class="dropdown-item"
+                    (click)="event.Status='AVAILABLE'; statusDropdown.close()">AVAILABLE</button>
+                    <button ngbDropdownItem class="dropdown-item"
+                    (click)="event.Status='NOT AVAILABLE'; statusDropdown.close()">NOT AVAILABLE</button>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="cell-centered">
+              <div>
+                <div #categoryDropdown="ngbDropdown" ngbDropdown class="d-inline-block" placement="bottom-left">
+                  <button class="btn btn-sm drop-down-table-cell" id="dropdownCategory" ngbDropdownToggle>
+                    {{ event.RelativeCategory ? event.RelativeCategory : "Select" }}
+                  </button>
+                  <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+                    <button ngbDropdownItem class="dropdown-item" *ngFor="let category of eventService.eventCategories"
+                    (click)="event.RelativeCategory = category.Category; categoryDropdown.close()">
+                      {{ category.Category }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="cell-centered">
+              <div>
+                <div #venueDropdown="ngbDropdown" ngbDropdown class="d-inline-block" placement="bottom-left">
+                  <button class="btn btn-sm drop-down-table-cell" id="dropdownVenue" ngbDropdownToggle>
+                    {{ event.RelativeVenueNumber ? getVenueName(event.RelativeVenueNumber) : "Select" }}
+                  </button>
+                  <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+                    <button ngbDropdownItem class="dropdown-item" *ngFor="let venue of venueService.venues;"
+                    (click)="event.RelativeVenueNumber = venue.VenueNumber; venueDropdown.close()">
+                      {{  venue.Name }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="cell-centered">
+              <app-inline-edit [(ngModel)]="event.TitleDescription" type="text">
+              </app-inline-edit>
+            </td>
+            <td class="cell-centered">
+              <p-calendar class="calendar-input-invalid" dataType="string" [(ngModel)]="event.DateAndTime"
+              (onSelect)=" event.DateAndTime = $event;"
+              readonlyInput="true" dateFormat="DD, mm/dd/yy," showTime="true" hourFormat="12"
+              placeholder="Select Date and Time">
+            </p-calendar>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <pagination-controls class="modal-pagination" previousLabel="" nextLabel="" autoHide="true" responsive="true"
+        (pageChange)="templateEventsPageNbr = $event" id='pagination_event_list'>
+      </pagination-controls>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary"
+        (click)="discardTemplate(); newTemplateModal.close()">Discard</button>
+      <button type="button" class="btn btn-primary" appNoDblClick (click)="addTemplate()">Add Template</button>
+    </div>
+  </ng-template>
+</div>

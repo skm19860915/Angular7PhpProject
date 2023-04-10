@@ -1,0 +1,45 @@
+.combobox {
+  left: auto !important;
+  right: -1px;
+}
+
+.combobox-container {
+  float: right;
+  margin: 0 0 15px 15px;
+}
+
+.combobox-container i {
+  color: #838383;
+  cursor: pointer;
+}
+
+.combobox-container i:hover {
+  color: #a5a5a5;
+}
+
+.combobox-filter {
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.combobox-action {
+  margin-left: 15px;
+}
+
+.action-combobox {
+  font-size: 95%;
+}
+
+/deep/ .swal-text {
+  font-size: 15px;
+  text-align: left;
+  line-height: 190%;
+}
+
+/deep/ .swal-modal {
+  width: 60%;
+}
+
+/deep/ .swal-title:not(:last-child) {
+  margin-bottom: 20px;
+}

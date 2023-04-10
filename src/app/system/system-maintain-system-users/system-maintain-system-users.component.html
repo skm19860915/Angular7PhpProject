@@ -1,0 +1,147 @@
+<div class="row-fluid content">
+  <button type="button" class="btn btn-secondary float-right add-user-btn" (click)="initNewUserModal(); openModal(addUserModalObj);">
+    <i class="fa fa-user-plus"></i> &nbsp;Add User
+  </button>
+
+  <div class="combobox-container float-left">
+    <app-filter-drop-down #statusFilter [filterName]="'Status'" [filterOptionList]="userService.statusList"
+      [menuPlacement]="'bottom-left'">
+    </app-filter-drop-down>
+  </div>
+
+  <div class="combobox-container float-left">
+    <div class="input-group mb-3">
+      <div class="input-group-prepend">
+        <span class="input-group-text" id="input-icon"><i class="fa fa-filter"></i></span>
+      </div>
+      <input maxlength="40" type="text" class="form-control" name="filterByUsername" [(ngModel)]="filterByUsername" placeholder="Username">
+        &nbsp;<i *ngIf="filterByUsername.length>0" class="fa fa-times filter-clear-i" (click)="filterByUsername=''" aria-hidden="true"></i>
+    </div>
+  </div>
+  <table class="table table-hover">
+    <thead>
+      <th class="col-1" scope="col">User Name</th>
+      <th class="col-1" scope="col">Email</th>
+      <th class="cell-centered col-1" scope="col">Status</th>
+      <th class="cell-centered col-1" scope="col">Everyone</th>
+      <th class="cell-centered col-1" scope="col">Associate</th>
+      <th class="cell-centered col-1" scope="col">Partner</th>
+      <th class="cell-centered col-1" scope="col">SectionHead</th>
+      <th class="cell-centered col-1" scope="col">Ticket Admin</th>
+      <th class="cell-centered col-1" scope="col">System Admin</th>
+    </thead>
+    <tbody class="table-content-sm">
+      <tr *ngFor="
+        let user of userService.users | 
+        objectTextFilter: 'userName' : filterByUsername | 
+        objectFilter: 'userStatus' : statusFilter.filterVal?(statusFilter.filterVal) : null : 'EQUALS' | 
+        paginate: { itemsPerPage: 10, currentPage: pageNbr }; 
+        let i = index"
+      >
+        <td>{{ user.userName }}</td>
+        <td>{{ user.userAccount }}</td>
+        <td class="cell-centered cell-icon">
+          <!-- <i (click)="changeStatus(user.userAccount)" class="fa user-table-action" [ngStyle]="{'color': user.userStatus=='ACTIVE' ?  '#006140':'#dc3545'}" [ngClass]="{'fa-user': user.userStatus=='ACTIVE', 'fa-minus-circle': user.userStatus=='INACTIVE'}"></i> -->
+          <i (click)="changeStatus(user.userAccount)" class="fa user-table-action" [ngStyle]="{'color': user.userStatus=='ACTIVE' ?  '#004278':'#dc3545'}" [ngClass]="{'fa-user': user.userStatus=='ACTIVE', 'fa-minus-circle': user.userStatus=='INACTIVE'}"></i>
+        </td>
+        <td class="cell-centered cell-icon">
+          <i (click)="changeCredential(user.userAccount, 'memberOfEveryone')" placement="top" ngbTooltip="Everyone" class="fa fa-check user-table-action" [ngStyle]="{'opacity': user.memberOfEveryone=='Y' ? '1':'0.2'}"></i>
+        </td>
+        <td class="cell-centered cell-icon">
+          <i (click)="changeCredential(user.userAccount, 'memberOfAssociate')" placement="top" ngbTooltip="Associate" class="fa fa-check user-table-action" [ngStyle]="{'opacity': user.memberOfAssociate=='Y' ? '1':'0.2'}"></i>
+        </td>
+        <td class="cell-centered cell-icon">
+          <i (click)="changeCredential(user.userAccount, 'memberOfPartner')" placement="top" ngbTooltip="Partner" class="fa fa-check user-table-action" [ngStyle]="{'opacity': user.memberOfPartner=='Y' ? '1':'0.2'}"></i>
+        </td>
+        <td class="cell-centered cell-icon">
+          <i (click)="changeCredential(user.userAccount, 'memberOfSectionHead')" placement="top" ngbTooltip="Section Head" class="fa fa-check user-table-action" [ngStyle]="{'opacity': user.memberOfSectionHead=='Y' ? '1':'0.2'}"></i>
+        </td>
+        <td class="cell-centered cell-icon">
+          <i (click)="changeCredential(user.userAccount, 'memberOfTicketAdministration')" placement="top" ngbTooltip="Ticket Administrator" class="fa fa-check user-table-action" [ngStyle]="{'opacity': user.memberOfTicketAdministration=='Y' ? '1':'0.2'}"></i>
+        </td>
+        <td class="cell-centered cell-icon">
+          <i (click)="changeCredential(user.userAccount, 'memberOfSystemAdministration')" placement="top" ngbTooltip="System Administrator" class="fa fa-check user-table-action" [ngStyle]="{'opacity': user.memberOfSystemAdministration=='Y' ? '1':'0.2'}"></i>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <pagination-controls autoHide="true" (pageChange)="pageNbr = $event"></pagination-controls>
+</div>
+<!-- Add User Modal -->
+<ng-template #addUserModalObj let-c="close" let-d="dismiss">
+  <div class="modal-header">
+    <div class="col">
+      <div class="row">
+        <h4 class="modal-title">Add New User</h4>
+        <button type="button" class="close" (click)="addUserModal.close()" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="modal-body">
+    <div class="container">
+      <div class="form-group">
+        <label>Status</label>
+        <div>
+          <div #statusDropdown="ngbDropdown" ngbDropdown class="d-inline-block">
+            <button class="btn btn-sm btn-custom-details" id="dropdownStatus" ngbDropdownToggle>
+              {{ newUser.userStatus }}
+            </button>
+            <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+              <button ngbDropdownItem class="dropdown-item" (click)="newUser.userStatus='ACTIVE'; statusDropdown.close()">ACTIVE</button>
+              <button ngbDropdownItem class="dropdown-item" (click)="newUser.userStatus='INACTIVE'; statusDropdown.close()">INACTIVE</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="userName">Name</label>
+        <input 
+          [formControl]="newUser.formctrl_userName" 
+          type="text" 
+          class="form-control" 
+          maxlength="40" 
+          name="userName" 
+          placeholder="Enter User Name"
+        >
+      </div>
+      <div class="form-group">
+        <label for="userEmail">Email address</label>
+        <input 
+          [formControl]="newUser.formctrl_userEmail" 
+          [email]="true" 
+          type="text" 
+          class="form-control" 
+          maxlength="40" 
+          name="userEmail" 
+          placeholder="Enter User Email"
+        >
+      </div>
+      <br>
+      <h5>User Roles</h5>
+      <div (click)="newUser.memberOfEveryone=='Y' ? newUser.memberOfEveryone='N' : newUser.memberOfEveryone='Y'" class="new-user-credential-container">
+        <i class="fa fa-check" [ngStyle]="{'opacity': newUser.memberOfEveryone == 'Y' ? '1':'0.2'}"></i> &nbsp;Everyone
+      </div>
+      <div (click)="newUser.memberOfAssociate=='Y' ? newUser.memberOfAssociate='N' : newUser.memberOfAssociate='Y'" class="new-user-credential-container">
+        <i class="fa fa-check" [ngStyle]="{'opacity': newUser.memberOfAssociate == 'Y' ? '1':'0.2'}"></i> &nbsp;Associate
+      </div>
+      <div (click)="newUser.memberOfPartner=='Y' ? newUser.memberOfPartner='N' : newUser.memberOfPartner='Y'" class="new-user-credential-container">
+        <i class="fa fa-check" [ngStyle]="{'opacity': newUser.memberOfPartner == 'Y' ? '1':'0.2'}"></i> &nbsp;Partner
+      </div>
+      <div (click)="newUser.memberOfSectionHead=='Y' ? newUser.memberOfSectionHead='N' : newUser.memberOfSectionHead='Y'" class="new-user-credential-container">
+        <i class="fa fa-check" [ngStyle]="{'opacity': newUser.memberOfSectionHead == 'Y' ? '1':'0.2'}"></i> &nbsp;Section Head
+      </div>
+      <div (click)="newUser.memberOfTicketAdministration=='Y' ? newUser.memberOfTicketAdministration='N' : newUser.memberOfTicketAdministration='Y'" class="new-user-credential-container">
+        <i class="fa fa-check" [ngStyle]="{'opacity': newUser.memberOfTicketAdministration == 'Y' ? '1':'0.2'}"></i> &nbsp;Ticket Administration
+      </div>
+      <div (click)="newUser.memberOfSystemAdministration=='Y' ? newUser.memberOfSystemAdministration='N' : newUser.memberOfSystemAdministration='Y'" class="new-user-credential-container">
+        <i class="fa fa-check" [ngStyle]="{'opacity': newUser.memberOfSystemAdministration == 'Y' ? '1':'0.2'}"></i> &nbsp;System Administration
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="addUserModal.close()">Close</button>
+    <button type="button" class="btn btn-primary" appNoDblClick (click)="addNewUser()">Add User</button>
+  </div>
+</ng-template>

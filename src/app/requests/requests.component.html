@@ -1,0 +1,392 @@
+<div class="container-fluid main-content">
+  <span class="d-none d-md-block">
+    <h5>
+      <span *ngIf="userService.curUser.userAccount==userService.selUser.userAccount;else otherSelUser">Your Ticket
+        Requests</span>
+      <ng-template #otherSelUser>Ticket Requests for {{ userService.selUser.userName }}
+        ({{userService.selUser.userAccount}})</ng-template>
+    </h5>
+  </span>
+  <span class="d-block d-md-none">
+    <h5>
+      <span *ngIf="userService.curUser.userAccount==userService.selUser.userAccount;else otherSelUserMobile">Your Ticket
+        Requests</span>
+      <ng-template #otherSelUserMobile>Ticket Requests for</ng-template>
+    </h5>
+    <span *ngIf="userService.curUser.userAccount!=userService.selUser.userAccount">{{ userService.selUser.userName }}
+      ({{userService.selUser.userAccount}})</span>
+  </span>
+  <div *ngIf="mobileSelectedRequestIndex>-1" class="d-block d-md-none mobile-action-btn">
+    <button *ngIf="requestService.ticketRequests[mobileSelectedRequestIndex].statusOfTicketRequest != 'CANCELLED'"
+      (click)="openModal('requestInfoModal', requestInfoModalObj);" type="button" class="btn btn-block btn-dark">
+      Details
+    </button>
+    <button
+      *ngIf="requestService.ticketRequests[mobileSelectedRequestIndex].statusOfTicketRequest == 'SUBMITTED/PENDING'"
+      (click)="editRequest(mobileSelectedRequestIndex, true); openModal('editRequestModal', editRequestModalObj);"
+      type="button" class="btn btn-primary btn-block">
+      Edit
+    </button>
+    <button
+      *ngIf="requestService.ticketRequests[mobileSelectedRequestIndex].statusOfTicketRequest == 'SUBMITTED/PENDING'"
+      type="button" class="btn btn-danger btn-block" (click)="cancelRequest(mobileSelectedRequestIndex, true)">
+      Cancel
+    </button>
+  </div>
+  <div class="row justify-content-center">
+    <table class="table table-requests">
+      <thead>
+        <tr class="mobile-table-header">
+          <th scope="col"><span class="d-none d-md-block">Status</span></th>
+          <th scope="col">Event</th>
+          <!-- <th scope="col" class="d-none d-sm-table-cell">Venue</th>
+          <th scope="col" class="d-none d-lg-table-cell">Delivery Type</th> -->
+          <th scope="col" class="d-none d-lg-table-cell">Delivery Email Address</th>
+          <th scope="col" class="d-none d-sm-table-cell">Seat Type</th>
+          <th scope="col" class="d-none d-lg-table-cell">Section/Row/Seat</th>
+          <th scope="col" class="d-none d-lg-table-cell">Usage Reason</th>
+          <!-- <th scope="col" class="d-none d-lg-table-cell">Section</th>
+          <th scope="col" class="d-none d-lg-table-cell">Row</th>
+          <th scope="col" class="d-none d-lg-table-cell">Seat</th> -->
+          <th scope="col" class="d-none d-lg-table-cell">Client Matter Number</th>
+          <th scope="col" class="d-none d-lg-table-cell">Guest Name</th>
+          <th scope="col" class="d-none d-lg-table-cell">Guest Company</th>
+          <th scope="col" class="d-none d-md-table-cell">
+            <!--Details-->
+          </th>
+          <th scope="col" class="d-none d-md-table-cell">
+            <!--Edit-->
+          </th>
+          <th scope="col" class="d-none d-md-table-cell">
+            <!--Cancel-->
+          </th>
+        </tr>
+      </thead>
+      <tbody class="table-content-sm">
+        <tr
+          *ngFor="let request of requestService.ticketRequests | objectFilter: 'RequestedBy' : userService.selUser.userAccount : 'EQUALS' | objectFilter: 'statusOfTicketRequest' : 'CANCELLED' : 'IS_NOT' | paginate: { itemsPerPage: 10, currentPage: pageNbr }; let i = index"
+          (click)="selectRequest(request.RequestNumber)" [ngClass]="{'mobile-ticket-table-sel': request.selected}">
+          <td class="">
+            <i placement="right" ngbTooltip="Event has taken place."
+              *ngIf="isInPast(request.EventDateTime.date.replace(' ','T'))"
+              class="fa fa-clock-o fa-disabled selected-table-icon"></i>
+            <i placement="right" ngbTooltip="Request approved"
+              *ngIf="!isInPast(request.EventDateTime.date.replace(' ','T')) && request.statusOfTicketRequest=='APPROVED'"
+              class="fa fa-check-square-o fa-approved selected-table-icon"></i>
+            <i placement="right" ngbTooltip="Request not approved"
+              *ngIf="!isInPast(request.EventDateTime.date.replace(' ','T')) && request.statusOfTicketRequest=='NOT APPROVED'"
+              class="fa fa-times-circle-o fa-cancelled selected-table-icon"></i>
+            <i placement="right" ngbTooltip="Request submitted/pending"
+              *ngIf="!isInPast(request.EventDateTime.date.replace(' ','T')) && request.statusOfTicketRequest=='SUBMITTED/PENDING'"
+              class="fa fa-hourglass-half fa-pending selected-table-icon"></i>
+          </td>
+          <td>{{ request.EventDescription }}<br><span
+              *ngIf="request.EventDateTime">{{ request.EventDateTime.date.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y, h:mm a' }}</span>
+          </td>
+          <!-- <td class="d-none d-sm-table-cell">{{ venueService.getVenueName(request.AssociatedVenueNumber) }}</td>
+          <td class="d-none d-lg-table-cell">{{ request.AssociatedTicketDeliveryType }}</td> -->
+          <td class="d-none d-lg-table-cell">{{ request.GuestEmail }}</td>
+          <td class="d-none d-sm-table-cell">{{ request.AssociatedSeatType }} {{ request.RequestNumber }}</td>
+          <td class="d-none d-sm-table-cell">{{ request.Section }} / {{ request.Row }} / {{ request.Seat }}</td>
+          <!-- <td class="d-none d-lg-table-cell">{{ request.Section }}</td>
+          <td class="d-none d-lg-table-cell">{{ request.Row }}</td>
+          <td class="d-none d-lg-table-cell">{{ request.Seat }}</td> -->
+          <td class="d-none d-sm-table-cell">{{ request.ReasonCode }}</td>
+          <td class="d-none d-sm-table-cell">{{ request.ClientMatter }}</td>
+          <td class="d-none d-sm-table-cell">{{ request.GuestName }}</td>
+          <td class="d-none d-sm-table-cell">{{ request.GuestCompany }}</td>
+          <td class="d-none d-md-table-cell">
+            <button *ngIf="!isInPast(request.EventDateTime.date.replace(' ','T'))" type="button"
+              class="btn btn-sm btn-secondary" (click)="openRequestDetails(request.RequestNumber)">Details</button>
+          </td>
+          <td class="d-none d-md-table-cell">
+            <button
+              *ngIf="request.statusOfTicketRequest != 'APPROVED' && request.statusOfTicketRequest != 'NOT APPROVED' && !isInPast(request.EventDateTime.date.replace(' ','T'))"
+              type="button" class="btn btn-sm btn-primary"
+              (click)="editRequest(request.RequestNumber, false); openModal('editRequestModal', editRequestModalObj);">Edit</button>
+          </td>
+          <td class="d-none d-md-table-cell">
+            <button
+              *ngIf="request.statusOfTicketRequest != 'APPROVED' && request.statusOfTicketRequest != 'NOT APPROVED' && !isInPast(request.EventDateTime.date.replace(' ','T'))"
+              type="button" class="btn btn-sm btn-danger"
+              (click)="cancelRequest(request.RequestNumber, false)">Cancel</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <pagination-controls autoHide="true" responsive="true" (pageChange)="pageNbr = $event"></pagination-controls>
+  </div>
+</div>
+<!-- Edit Request Modal -->
+<ng-template #editRequestModalObj let-c="close" let-d="dismiss">
+  <div class="modal-header">
+    <div class="col">
+      <div class="row">
+        <h4 class="modal-title" id="editRequestModalLabel">Edit
+          <span *ngIf="userService.curUser.userAccount==userService.selUser.userAccount;else otherUser">your
+            request</span>
+          <ng-template #otherUser>request for {{ userService.selUser.userName }} ({{userService.selUser.userAccount}})
+          </ng-template>
+          ...
+        </h4>
+        <button type="button" class="close d-none d-md-block" (click)="editRequestModal.close()" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="row row-event-info">
+        <small>
+          <p><b>{{ editedRequest.EventDescription }}</b></p>
+          <p *ngIf="editedRequest.EventDateTime">{{ editedRequest.EventDateTime.date.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y, h:mm a' }}</p>
+          <p>{{ venueService.getVenueName(editedRequest.AssociatedVenueNumber) }}</p>
+          <div class="request-info-seat">
+            Section: <b>{{ editedRequest.Section }}</b> Row: <b>{{ editedRequest.Row }}</b> Seat:
+            <b>{{ editedRequest.Seat }}</b>
+          </div>
+        </small>
+      </div>
+    </div>
+  </div>
+  <div class="modal-body">
+    <div class="container">
+      <div class="form-group">
+        <label>Usage Reason</label>
+        <div>
+          <div #usageReasonDropdown="ngbDropdown" ngbDropdown class="d-inline-block">
+            <button [ngClass]="{'invalid': !editedRequest.ReasonCode, 'touched': editedRequest.ReasonCode}"
+              class="btn btn-sm btn-custom-details btn-usage-reason" id="dropdownUseReason" name="dropdownUseReason"
+              ngbDropdownToggle>
+              {{ editedRequest.ReasonCode?(editedRequest.ReasonCode):"Select Usage Reason" }}
+            </button>
+            <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+              <button ngbDropdownItem class="dropdown-item" *ngFor="let reason of ticketService.usageReasons"
+                (click)="editedRequest.ReasonCode=reason.Reason.trim(); usageReasonDropdown.close()">{{ reason.Reason.trim() }}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Delivery Type</label>
+        <div>
+          <div #deliveryTypeDropdown="ngbDropdown" ngbDropdown class="d-inline-block">
+            <button
+              [ngClass]="{'invalid': !editedRequest.AssociatedTicketDeliveryType, 'touched': editedRequest.AssociatedTicketDeliveryType}"
+              class="btn btn-sm btn-custom-details btn-usage-reason" id="dropdownUseReason" name="dropdownUseReason"
+              ngbDropdownToggle>
+              {{ editedRequest.AssociatedTicketDeliveryType?(editedRequest.AssociatedTicketDeliveryType):"Select Delivery Type" }}
+            </button>
+            <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+              <button ngbDropdownItem class="dropdown-item"
+                *ngFor="let deliveryTypeItem of ticketService.ticketDeliveryTypes"
+                (click)="editedRequest.AssociatedTicketDeliveryType=deliveryTypeItem.DeliveryType; deliveryTypeDropdown.close()">{{ deliveryTypeItem.DeliveryType }}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="guestName">Name</label>
+        <input [formControl]="editedRequest.formctrl_guestName" type="text" class="form-control" maxlength="40"
+          name="guestName" placeholder="Enter Guest Name">
+      </div>
+      <div class="form-group">
+        <label for="guestEmail">Delivery Email address</label>
+        <input [formControl]="editedRequest.formctrl_guestEmail"
+          [email]="editedRequest.formctrl_guestEmail.value!='' && editedRequest.formctrl_guestEmail.value!=null"
+          type="text" class="form-control" maxlength="40" name="guestEmail" placeholder="Enter Guest Email">
+      </div>
+      <div class="form-group">
+        <label for="guestCompany">Company</label>
+        <input [formControl]="editedRequest.formctrl_guestCompany" maxlength="40" type="text" class="form-control"
+          name="guestCompany" placeholder="Enter Guest Company Name">
+      </div>
+      <div class="form-group">
+        <label for="notes_textbox">Notes</label>
+        <textarea name="notes_textbox" rows='6' [formControl]="editedRequest.formctrl_guestNotes" type="text"
+          class="form-control" maxlength="256" placeholder="Enter Additional Notes">
+        </textarea>
+      </div>
+      <div *ngIf="editedRequest.ReasonCode && editedRequest.ReasonCode === 'EXISTING CLIENT'" class="form-group">
+        <label for="clientMatterNumber">Client Matter Number</label>
+        <div>
+          <!-- <input list="matterNumbers" class="form-control" (change)="saveClinetMatter($event)"
+          [ngClass]="{'invalid': !editedRequest.ClientMatter, 'touched': editedRequest.ClientMatter}" value="{{editedRequest.ClientMatter}}">
+          <datalist id="matterNumbers">
+            <option *ngFor="let clientMatter of ticketService.clientMatters">
+              {{ clientMatter.fldClientMatter }} | {{ clientMatter.fldClientName }} | {{ clientMatter.fldMatterDescription }}
+            </option>
+          </datalist> -->
+
+          <div class="ng-autocomplete" style="width: 78% !important; margin-right: 15px; float: left;"
+            [ngClass]="{'invalid': !editedRequest.ClientMatter || editedRequest.ClientMatter == '' || editedRequest.ClientMatter == {},
+            'touched': editedRequest.ClientMatter}">
+            <ng-autocomplete
+              [(ngModel)] = "editedRequest.ClientMatter"
+              [data]="ticketService.clientMatters"
+              [searchKeyword]="keyword"
+              (selected)='saveClinetMatter1($event)'
+              (inputChanged)='onChangeSearch($event)'
+              (inputFocused)='onFocused($event)'
+              [itemTemplate]="itemTemplate"
+              [notFoundTemplate]="notFoundTemplate">
+            </ng-autocomplete>
+            <ng-template #itemTemplate let-item>
+            <a [innerHTML]="item.fldClientMatter + ' | ' + item.fldClientName + ' | ' + item.fldMatterDescription"></a>
+            </ng-template>
+            <ng-template #notFoundTemplate let-notFound>
+            <div [innerHTML]="notFound"></div>
+            </ng-template>
+          </div>
+          <button type="button" class="btn btn-primary" (click)="openModal('selectClientMatterCountByModal', selectClientMatterCountByModalObj);">Search</button>
+        </div>
+      </div>
+      <!-- <div *ngIf="editedRequest.ReasonCode && editedRequest.ReasonCode === 'EXISTING CLIENT'" class="form-group">
+        <label for="clientMatterNumber">Client Matter Number</label>
+        <div>
+          <div #clientMatterNumber="ngbDropdown"
+            [autoClose]="false"
+            (clickOutside)="filterOptionsVal = ''; clientMatterNumber.close()"
+            placement="bottom-left" ngbDropdown class="d-inline-block">
+            <button [ngClass]="{'invalid': !editedRequest.ClientMatter, 'touched': editedRequest.ClientMatter}"
+                class="btn btn-sm btn-custom-details btn-no-margin" id="clientMatterNumber"
+                name="clientMatterNumber" ngbDropdownToggle>
+                {{ editedRequest.ClientMatter?(editedRequest.ClientMatter):"Select Client Matter" }}
+              </button>
+            <div ngbDropdownMenu aria-labelledby="clientMatterNumber">
+              <input
+                #searchInput
+                maxlength="40"
+                type="text"
+                [(ngModel)]="filterOptionsVal"
+                #ctrl="ngModel"
+                placeholder="Search"
+              >
+              <button ngbDropdownItem class="dropdown-item"
+                *ngFor="let clientMatter of ticketService.clientMatters  | objectFilter: 'fldClientMatter' : filterOptionsVal?(filterOptionsVal) : null : 'CONTAINS'"
+                (click)="editedRequest.ClientMatter = clientMatter.fldClientMatter; filterOptionsVal=''; clientMatterNumber.close()">
+                {{ clientMatter.fldClientMatter }} | {{ clientMatter.fldClientName }} | {{ clientMatter.fldMatterDescription }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div> -->
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="editRequestModal.close()">Close</button>
+    <button type="button" class="btn btn-primary" appNoDblClick (click)="updateRequest()">Update Guest Details</button>
+  </div>
+</ng-template>
+
+<!-- Requests Data Info Modal (Mobile) -->
+<ng-template class="modal-dialog-centered request-info-modal" #requestInfoModalObj let-c="close" let-d="dismiss">
+  <div class="modal-body">
+    <span class="badge badge-secondary">
+      {{ requestService.ticketRequests[mobileSelectedRequestIndex].statusOfTicketRequest }}
+    </span>
+    <h5>
+      Section: {{ requestService.ticketRequests[mobileSelectedRequestIndex].Section }}
+      &nbsp;Row: {{ requestService.ticketRequests[mobileSelectedRequestIndex].Row }}
+      &nbsp;Seat: {{ requestService.ticketRequests[mobileSelectedRequestIndex].Seat }}
+    </h5>
+    <small>
+      <b>{{ requestService.ticketRequests[mobileSelectedRequestIndex].EventDescription }}</b>
+      <br>
+      {{ requestService.ticketRequests[mobileSelectedRequestIndex].EventDateTime.date.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y, h:mm a' }}
+      <br>
+      {{ venueService.getVenueName(requestService.ticketRequests[mobileSelectedRequestIndex].AssociatedVenueNumber) }}
+    </small>
+    <br>
+    <hr />
+    <p class="details-modal-entry">
+      <b>Usage Reason:</b><br>
+      {{ requestService.ticketRequests[mobileSelectedRequestIndex].ReasonCode }}
+    </p>
+    <p class="details-modal-entry">
+      <b>Delivery Type:</b><br>
+      {{ requestService.ticketRequests[mobileSelectedRequestIndex].AssociatedTicketDeliveryType }}
+    </p>
+    <p class="details-modal-entry">
+      <b class="add-info-title">Guest Name:</b><br>
+      {{ requestService.ticketRequests[mobileSelectedRequestIndex].GuestName }}
+    </p>
+    <p class="details-modal-entry">
+      <b class="add-info-title">Delivery Email Address:</b><br>
+      {{ requestService.ticketRequests[mobileSelectedRequestIndex].GuestEmail }}
+    </p>
+    <p class="details-modal-entry">
+      <b class="add-info-title">Guest Company:</b><br>
+      {{ requestService.ticketRequests[mobileSelectedRequestIndex].GuestCompany }}
+    </p>
+    <p
+      class="details-modal-entry textbox-word-break">
+      <b class="add-info-title">Notes:</b><br>
+      {{ requestService.ticketRequests[mobileSelectedRequestIndex].RequestNotes }}
+    </p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="requestInfoModal.close()">Close</button>
+  </div>
+</ng-template>
+
+<!-- select ClientMatter Modal-->
+<ng-template #selectClientMatterCountByModalObj let-c="close" let-d="dismiss">
+  <div class="modal-header">
+    <div class="col">
+      <div class="row">
+        <h4>&nbsp;</h4>
+        <button type="button" class="d-none d-md-block close" style="margin-top: 10px; margin-bottom: 15px; margin-right: 10px; padding: 0px;"
+          (click)="getFilterInformation(); ticketService.pageCount >= pageNumber && pageNumber > 0 && selectClientMatterCountByModal.close()" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="modal-body">
+    <div class="container">
+      <div class="row justify-content-around">
+        <div class="col-md-12">
+          <h4>Total Count: {{ticketService.totalCount}}</h4>
+        </div>
+        <div class="col-md-6">
+          <div style="float: left; margin-right: 10px;">
+            <div #recordCountDropdown="ngbDropdown" ngbDropdown class="d-inline-block" placement="bottom-left">
+              <button class="btn btn-sm drop-down-table-cell btn-custom-details" style="padding-right: 50px;" id="recordCountDropdown" ngbDropdownToggle>
+                {{ recordCount ? recordCount : "Select" }}
+              </button>
+              <div ngbDropdownMenu aria-labelledby="recordCountDropdown">
+                <!-- <button ngbDropdownItem class="dropdown-item"
+                (click)="recordCount = 1; getPageCount(1); recordCountDropdown.close()">1</button>
+                <button ngbDropdownItem class="dropdown-item"
+                (click)="recordCount = 2; getPageCount(2); recordCountDropdown.close()">2</button>
+                <button ngbDropdownItem class="dropdown-item"
+                (click)="recordCount = 3; getPageCount(3); recordCountDropdown.close()">3</button> -->
+                <button ngbDropdownItem class="dropdown-item"
+                (click)="recordCount = 50; getPageCount(50); recordCountDropdown.close()">50</button>
+                <button ngbDropdownItem class="dropdown-item"
+                (click)="recordCount = 60; getPageCount(60); recordCountDropdown.close()">60</button>
+                <button ngbDropdownItem class="dropdown-item"
+                (click)="recordCount = 70; getPageCount(70); recordCountDropdown.close()">70</button>
+                <button ngbDropdownItem class="dropdown-item"
+                (click)="recordCount = 80; getPageCount(80); recordCountDropdown.close()">80</button>
+                <button ngbDropdownItem class="dropdown-item"
+                (click)="recordCount = 90; getPageCount(90); recordCountDropdown.close()">90</button>
+                <button ngbDropdownItem class="dropdown-item"
+                (click)="recordCount = 100; getPageCount(100); recordCountDropdown.close()">100</button>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top: 5px;">Records</div>
+        </div>
+        <div class="col-md-6">
+          <div style="float: left; width: 40%; margin-right: 10px;">
+            <input type="text" class="form-control" [(ngModel)]="pageNumber" [ngClass]="{'invalid': pageNumber > ticketService.pageCount || pageNumber == 0}">
+          </div>
+          <div style="margin-top: 5px;"> / {{ticketService.pageCount}} pages</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary"
+      (click)="getFilterInformation(); ticketService.pageCount >= pageNumber && pageNumber > 0 && selectClientMatterCountByModal.close()">OK</button>
+  </div>
+</ng-template>

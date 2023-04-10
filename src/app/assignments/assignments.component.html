@@ -1,0 +1,336 @@
+<div class="container main-content">
+  <span class="d-none d-md-block">
+    <h5>
+      <span *ngIf="userService.curUser.userAccount==userService.selUser.userAccount;else otherSelUser">Your Ticket
+        Assignments</span>
+      <ng-template #otherSelUser>Ticket Assignments for {{ userService.selUser.userName }}
+        ({{userService.selUser.userAccount}})</ng-template>
+    </h5>
+  </span>
+  <span class="d-block d-md-none">
+    <h5>
+      <span *ngIf="userService.curUser.userAccount==userService.selUser.userAccount;else otherSelUserMobile">Your Ticket
+        Assignments</span>
+      <ng-template #otherSelUserMobile>Ticket Assignments for</ng-template>
+    </h5>
+    <span *ngIf="userService.curUser.userAccount!=userService.selUser.userAccount">{{ userService.selUser.userName }}
+      ({{userService.selUser.userAccount}})</span>
+  </span>
+  <div *ngIf="mobileSelectedAssignmentIndex>-1" class="d-block d-md-none mobile-action-btn">
+    <button (click)="openModal('assignmentInfoModal', assignmentInfoModalObj);" type="button"
+      class="btn btn-block btn-dark">
+      Details
+    </button>
+    <button
+      (click)="editAssignment(mobileSelectedAssignmentIndex, true); openModal('editAssignmentModal', editAssignmentModalObj);"
+      type="button" class="btn btn-primary btn-block">
+      Edit
+    </button>
+    <button
+      *ngIf="!isInPast(assignmentService.ticketAssignments[mobileSelectedAssignmentIndex].EventDateTime.date.replace(' ', 'T'))"
+      type="button" class="btn btn-info btn-block"
+      (click)="selectAssignmentForTransfer(mobileSelectedAssignmentIndex, true); openModal('transferModal', transferModalObj)">
+      Transfer
+    </button>
+    <button type="button" class="btn btn-danger btn-block"
+      (click)="cancelAssignment(mobileSelectedAssignmentIndex, true)">
+      Cancel
+    </button>
+  </div>
+  <br>
+  <div class="row justify-content-center">
+    <table class="table table-assignments">
+      <thead>
+        <th scope="col" class="d-none d-lg-table-cell">Status</th>
+        <th scope="col" class="d-none d-lg-table-cell">Event</th>
+        <!-- <th scope="col" class="d-none d-xl-table-cell">Venue</th>
+        <th scope="col" class="d-none d-md-table-cell">Delivery Type</th> -->
+        <th scope="col" class="d-none d-md-table-cell">Delivery Email Address</th>
+        <th scope="col" class="d-none d-md-table-cell">Seat Type</th>
+        <th scope="col" class="d-none d-lg-table-cell">Section/Row/Seat</th>
+        <!-- <th scope="col" class="d-none d-lg-table-cell">Section</th>
+        <th scope="col" class="d-none d-lg-table-cell">Row</th>
+        <th scope="col" class="d-none d-lg-table-cell">Seat</th> -->
+        <th scope="col" class="d-none d-lg-table-cell">Usage Reason</th>
+        <th scope="col" class="d-none d-lg-table-cell">Client Matter Number</th>
+        <th scope="col" class="d-none d-lg-table-cell">Guest Name</th>
+        <th scope="col" class="d-none d-lg-table-cell">Guest Company</th>
+        <th scope="col" class="d-none d-md-table-cell">
+          <!--Details-->
+        </th>
+        <th scope="col" class="d-none d-md-table-cell">
+          <!--Edit-->
+        </th>
+        <th scope="col" class="d-none d-md-table-cell">
+          <!--Transfer-->
+        </th>
+        <th scope="col" class="d-none d-md-table-cell">
+          <!--Cancel-->
+        </th>
+      </thead>
+      <tbody class="table-content-sm">
+        <tr
+          *ngFor="let assignment of assignmentService.ticketAssignments | objectFilter: 'RequestedBy' : userService.selUser.userAccount : 'EQUALS' | objectFilter: 'Status' : 'CANCELLED' : 'IS_NOT' | paginate: { itemsPerPage: 10, currentPage: pageNbr }; let i = index"
+          (click)="selectAssignment(assignment.AssignmentNumber)"
+          [ngClass]="{'mobile-ticket-table-sel': assignment.selected}">
+          <td class="">
+            <i placement="right" ngbTooltip="Event has taken place"
+              *ngIf="isInPast(assignment.EventDateTime.date.replace(' ','T'))"
+              class="fa fa-clock-o fa-disabled selected-table-icon"></i>
+            <i placement="right" ngbTooltip="Awaiting admin for review"
+              *ngIf="!isInPast(assignment.EventDateTime.date.replace(' ','T')) && assignment.Status=='AWAITING ADMIN'"
+              class="fa fa-hourglass-half fa-approved selected-table-icon"></i>
+            <i placement="right" ngbTooltip="Ready for delivery"
+              *ngIf="!isInPast(assignment.EventDateTime.date.replace(' ','T')) && assignment.Status=='TICKETS READY FOR DELIVERY'"
+              class="fa fa-truck fa-cancelled selected-table-icon"></i>
+            <i placement="right" ngbTooltip="Delivered"
+              *ngIf="!isInPast(assignment.EventDateTime.date.replace(' ','T')) && assignment.Status=='TICKETS DELIVERED'"
+              class="fa fa-check fa-pending selected-table-icon"></i>
+          </td>
+          <td>{{ assignment.EventDescription }}<br><span
+              *ngIf="assignment.EventDateTime">{{ assignment.EventDateTime.date.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y, h:mm a' }}</span>
+          </td>
+          <!-- <td class="d-none d-xl-table-cell">{{ venueService.getVenueName(assignment.AssociatedVenueNumber) }}</td>
+          <td class="d-none d-md-table-cell">{{ assignment.AssociatedTicketDeliveryType }}</td> -->
+          <td class="d-none d-md-table-cell">{{ assignment.GuestEmail }}</td>
+          <td class="d-none d-md-table-cell">{{ assignment.AssociatedSeatType }}</td>
+          <td class="d-none d-lg-table-cell">{{ assignment.Section }} / {{ assignment.Row }} / {{ assignment.Seat }}</td>
+          <!-- <td class="d-none d-lg-table-cell">{{ assignment.Section }}</td>
+          <td class="d-none d-lg-table-cell">{{ assignment.Row }}</td>
+          <td class="d-none d-lg-table-cell">{{ assignment.Seat }}</td> -->
+          <td class="d-none d-lg-table-cell">{{ assignment.AssociatedReasonCode }}</td>
+          <td class="d-none d-lg-table-cell">{{ assignment.ClientMatter }}</td>
+          <td class="d-none d-lg-table-cell">{{ assignment.GuestName }}</td>
+          <td class="d-none d-lg-table-cell">{{ assignment.GuestCompany }}</td>
+          <td class="d-none d-md-table-cell">
+            <button *ngIf="!isInPast(assignment.EventDateTime.date.replace(' ', 'T'))" type="button"
+              class="btn btn-sm btn-secondary"
+              (click)="mobileSelectedAssignmentIndex = getAssignmentIndex(assignment.AssignmentNumber); openModal('assignmentInfoModal', assignmentInfoModalObj)">Details</button>
+          </td>
+          <td class="d-none d-md-table-cell">
+            <button
+              *ngIf="assignment.Status != 'CANCELLED' && !isInPast(assignment.EventDateTime.date.replace(' ', 'T'))"
+              type="button" class="btn btn-sm btn-primary"
+              (click)="editAssignment(assignment.AssignmentNumber, false); openModal('editAssignmentModal', editAssignmentModalObj)">Edit</button>
+          </td>
+          <td class="d-none d-md-table-cell">
+            <button *ngIf="!isInPast(assignment.EventDateTime.date.replace(' ', 'T'))" type="button"
+              class="btn btn-sm btn-info"
+              (click)="selectAssignmentForTransfer(assignment, false); openModal('transferModal', transferModalObj)">Transfer</button>
+          </td>
+          <td class="d-none d-md-table-cell">
+            <button
+              *ngIf="assignment.Status != 'CANCELLED' && !isInPast(assignment.EventDateTime.date.replace(' ', 'T'))"
+              type="button" class="btn btn-sm btn-danger"
+              (click)="cancelAssignment(assignment.AssignmentNumber, false)">Cancel</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <pagination-controls autoHide="true" responsive="true" (pageChange)="pageNbr = $event"></pagination-controls>
+  </div>
+</div>
+<!-- Transfer Modal -->
+<ng-template #transferModalObj let-c="close" let-d="dismiss">
+  <div class="modal-header">
+    <div class="col">
+      <div class="row">
+        <h4 class="modal-title">Transfer
+          <span *ngIf="transferAssignment.stepInitialCreatedBy==userService.curUser.userAccount;else otherUser">Your
+            Ticket Assignment</span>
+          <ng-template #otherUser>Ticket Assignment For {{ transferAssignment.stepInitialCreatedBy }}</ng-template>
+          ...
+        </h4>
+        <button type="button" class="close d-none d-md-block" (click)="transferModal.close()" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="row row-event-info">
+        <small class="modal-event-info">
+          <p>{{ transferAssignment.EventDescription }}</p>
+          <p *ngIf="transferAssignment.EventDateTime">{{ transferAssignment.EventDateTime.date.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y @ h:mm a' }}</p>
+          <p>{{ venueService.getVenueName(transferAssignment.AssociatedVenueNumber) }}</p>
+          <p>Section: <b>{{ transferAssignment.Section }}</b> Row: <b>{{ transferAssignment.Row }}</b>
+          Seat: <b>{{ transferAssignment.Seat }}</b></p>
+        </small>
+      </div>
+    </div>
+  </div>
+  <div class="modal-body transfer-user-modal">
+    <div class="container">
+      This ticket is currently assigned to:
+      <br>
+      <b>{{ transferAssignment.RequestedBy }}</b>
+      <br><br>
+      Select the user, to which you want to transfer the ticket assignment:
+      <br><br>
+      <div class="d-none d-md-block">
+        <app-transfer-user-drop-down (selectOptionCallback)='transferPreSelection($event)'
+          [dropdownCenteredOnScreen]="true">
+        </app-transfer-user-drop-down>
+      </div>
+      <div class="d-block d-md-none">
+        <app-transfer-user-drop-down (selectOptionCallback)='transferPreSelection($event)' [menuPlacement]="'top'"
+          [dropdownCenteredOnScreen]="true">
+        </app-transfer-user-drop-down>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary"
+      (click)="transferAssignment.TransferToUser=null; transferModal.close()">Close</button>
+    <button type="button" class="btn btn-primary" [disabled]="!transferAssignment.TransferToUser" appNoDblClick
+      (click)="transferTicketAssignment()">
+      Transfer
+    </button>
+  </div>
+</ng-template>
+
+<!-- Assignment Edit Modal -->
+<ng-template #editAssignmentModalObj let-c="close" let-d="dismiss">
+  <div class="modal-header">
+    <div class="col">
+      <div class="row">
+        <h4 class="modal-title">Edit
+          <span *ngIf="userService.curUser.userAccount==userService.selUser.userAccount; else otherUser">Your Ticket
+            Assignment</span>
+          <ng-template #otherUser>Assignment for {{ userService.selUser.userName }}
+            ({{userService.selUser.userAccount}})</ng-template>
+          ...
+        </h4>
+        <button type="button" class="close d-none d-md-block" (click)="editAssignmentModal.close()" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="row row-event-info">
+        <small class="modal-event-info">
+          <p>{{ editedAssignment.EventDescription }}</p>
+          <p *ngIf="editedAssignment.EventDateTime">{{ editedAssignment.EventDateTime.date.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y @ h:mm a' }}</p>
+          <p>{{ venueService.getVenueName(editedAssignment.AssociatedVenueNumber) }}</p>
+          <p>Section: <b>{{ editedAssignment.Section }}</b> Row: <b>{{ editedAssignment.Row }}</b>
+          Seat: <b>{{ editedAssignment.Seat }}</b></p>
+        </small>
+      </div>
+    </div>
+  </div>
+  <div class="modal-body">
+    <div class="container">
+      <div class="form-group">
+        <label>Usage Reason</label>
+        <div>
+          <div #usageReasonDropdown="ngbDropdown" ngbDropdown class="d-inline-block">
+            <button
+              [ngClass]="{'invalid': !editedAssignment.AssociatedReasonCode, 'touched': editedAssignment.AssociatedReasonCode}"
+              class="btn btn-sm btn-custom-details btn-usage-reason" id="dropdownUseReason" name="dropdownUseReason"
+              ngbDropdownToggle>
+              {{ editedAssignment.AssociatedReasonCode?(editedAssignment.AssociatedReasonCode):"Select Usage Reason" }}
+            </button>
+            <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+              <button ngbDropdownItem class="dropdown-item" *ngFor="let reason of ticketService.usageReasons"
+                (click)="editedAssignment.AssociatedReasonCode=reason.Reason.trim(); usageReasonDropdown.close()">
+                {{ reason.Reason.trim() }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Delivery Type</label>
+        <div>
+          <div #deliveryTypeDropdown="ngbDropdown" ngbDropdown class="d-inline-block">
+            <button
+              [ngClass]="{'invalid': !editedAssignment.AssociatedTicketDeliveryType, 'touched': editedAssignment.AssociatedTicketDeliveryType}"
+              class="btn btn-sm btn-custom-details btn-usage-reason" id="dropdownUseReason" name="dropdownUseReason"
+              ngbDropdownToggle>
+              {{ editedAssignment.AssociatedTicketDeliveryType?(editedAssignment.AssociatedTicketDeliveryType):"Select Delivery Type" }}
+            </button>
+            <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+              <button ngbDropdownItem class="dropdown-item"
+                *ngFor="let deliveryType of ticketService.ticketDeliveryTypes"
+                (click)="editedAssignment.AssociatedTicketDeliveryType=deliveryType.DeliveryType; deliveryTypeDropdown.close()">
+                {{ deliveryType.DeliveryType }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="guestName">Name</label>
+        <input [formControl]="editedAssignment.formctrl_guestName" type="text" class="form-control" maxlength="40"
+          placeholder="Enter Guest Name">
+      </div>
+      <div class="form-group">
+        <label for="guestEmail">Delivery Email address</label>
+        <input [formControl]="editedAssignment.formctrl_guestEmail"
+          [email]="editedAssignment.formctrl_guestEmail.value !='' && editedAssignment.formctrl_guestEmail.value !== null"
+          type="text" class="form-control" maxlength="40" name="guestEmail" placeholder="Enter Guest Email">
+      </div>
+      <div class="form-group">
+        <label for="guestCompany">Company</label>
+        <input [formControl]="editedAssignment.formctrl_guestCompany" maxlength="40" type="text" class="form-control"
+          name="guestCompany" placeholder="Enter Guest Company Name">
+      </div>
+      <div class="form-group">
+        <label for="notes_textbox">Notes</label>
+        <textarea id="notes_textbox" rows='6' [formControl]="editedAssignment.formctrl_guestNotes" type="text"
+          class="form-control" maxlength="256" placeholder="Enter Additional Notes">
+        </textarea>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="editAssignmentModal.close()">Close</button>
+    <button type="button" class="btn btn-primary" appNoDblClick (click)="updateAssignment()">Update Guest
+      Details</button>
+  </div>
+</ng-template>
+
+<!-- Assignment Info Modal (Mobile) -->
+<ng-template #assignmentInfoModalObj let-c="close" let-d="dismiss">
+  <div class="modal-body">
+    <span
+      class="badge badge-secondary">{{ assignmentService.ticketAssignments[mobileSelectedAssignmentIndex].Status }}</span>
+    <h5>
+      Section: {{ assignmentService.ticketAssignments[mobileSelectedAssignmentIndex].Section }}
+      &nbsp;Row: {{ assignmentService.ticketAssignments[mobileSelectedAssignmentIndex].Row }}
+      &nbsp;Seat: {{ assignmentService.ticketAssignments[mobileSelectedAssignmentIndex].Seat }}
+    </h5>
+    <small class="modal-event-info">
+      <p>{{ assignmentService.ticketAssignments[mobileSelectedAssignmentIndex].EventDescription }}</p>
+      <p *ngIf="assignmentService.ticketAssignments[mobileSelectedAssignmentIndex].EventDateTime">{{ assignmentService.ticketAssignments[mobileSelectedAssignmentIndex].EventDateTime.date.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y, h:mm a' }}</p>
+      <p>{{ venueService.getVenueName(assignmentService.ticketAssignments[mobileSelectedAssignmentIndex].AssociatedVenueNumber) }}</p>
+      <p>Section: <b>{{ assignmentService.ticketAssignments[mobileSelectedAssignmentIndex].Section }}</b> Row: <b>{{ assignmentService.ticketAssignments[mobileSelectedAssignmentIndex].Row }}</b>
+      Seat: <b>{{ assignmentService.ticketAssignments[mobileSelectedAssignmentIndex].Seat }}</b></p>
+    </small>
+    <hr />
+    <p class="details-modal-entry">
+      <b>Usage Reason:</b><br>
+      {{ assignmentService.ticketAssignments[mobileSelectedAssignmentIndex].AssociatedReasonCode }}
+    </p>
+    <p class="details-modal-entry">
+      <b>Delivery Type:</b><br>
+      {{ assignmentService.ticketAssignments[mobileSelectedAssignmentIndex].AssociatedTicketDeliveryType }}
+    </p>
+    <p class="details-modal-entry">
+      <b class="add-info-title">Guest Name:</b><br>
+      {{ assignmentService.ticketAssignments[mobileSelectedAssignmentIndex].GuestName }}
+    </p>
+    <p *ngIf="assignmentService.ticketAssignments[mobileSelectedAssignmentIndex].GuestEmail"
+      class="details-modal-entry">
+      <b class="add-info-title">Delivery Email Address:</b><br>
+      {{ assignmentService.ticketAssignments[mobileSelectedAssignmentIndex].GuestEmail }}
+    </p>
+    <p class="details-modal-entry">
+      <b class="add-info-title">Guest Company:</b><br>
+      {{ assignmentService.ticketAssignments[mobileSelectedAssignmentIndex].GuestCompany }}
+    </p>
+    <p *ngIf="assignmentService.ticketAssignments[mobileSelectedAssignmentIndex].AssignmentNotes"
+      class="details-modal-entry textbox-word-break">
+      <b class="add-info-title">Notes:</b><br>
+      {{ assignmentService.ticketAssignments[mobileSelectedAssignmentIndex].AssignmentNotes }}
+    </p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="assignmentInfoModal.close()">Close</button>
+  </div>
+</ng-template>

@@ -1,0 +1,645 @@
+<div class="container">
+  <div class="row-fluid table-top-bar">
+    <button type="button" class="btn btn-secondary float-right"
+      [ngStyle]="{ 'margin-left': selectedTickets.length>0 ? '15px' : '0' }"
+      (click)="cleanUpSelectedTickets(); ticketTemplateSelection()">
+      <i class="fa fa-ticket"></i> &nbsp;Add Ticket(s)
+    </button>
+    <button placement="top" [disableTooltip]='!selectForDeletionOnly'
+      ngbTooltip="Only selected tickets of the same event can be edited." *ngIf="selectedTickets.length>0"
+      [ngClass]="{'disabled': selectForDeletionOnly}" type="button"
+      class="btn btn-secondary float-right btn-margin-left-15"
+      (click)="initTicketEditing(); openModal('editTicketsModal', editTicketsModalObj)">
+      <i class="fa fa-pencil"></i> &nbsp;Edit {{ selectedTickets.length }}
+      {{ selectedTickets.length > 1 ? 'Tickets' : 'Ticket' }}
+    </button>
+    <button *ngIf="selectedTickets.length>0" type="button" class="btn btn-danger float-right" (click)="deleteTickets();">
+      <i class="fa fa-trash"></i> &nbsp;Delete {{ selectedTickets.length }}
+      {{ selectedTickets.length > 1 ? 'Tickets' : 'Ticket' }}
+    </button>
+    <div class="combobox-container float-left">
+      <app-filter-drop-down #categoryFilter [filterName]="'Category'"
+        [filterOptionList]="eventService.eventCategoriesFilled" [menuPlacement]="'bottom-left'"
+        (filterActiveCallback)="discardSelectedTickets(); categoryFilterUpdate($event, eventFilter)"
+        (filterClearCallback)="discardSelectedTickets(); categoryFilterUpdate($event, eventFilter); eventFilter.filterVal = undefined">
+      </app-filter-drop-down>
+    </div>
+    <div class="combobox-container float-left">
+      <app-filter-drop-down #eventFilter [filterName]="'Event'" [filterOptionList]="eventService.events"
+        [filterDisplayKey]="'EventDescription'" [optionTitleDisplayKey]="'EventDescription'" [optionTitleIsDate]="0"
+        [optionValDisplayKey]="'EventDateTime'" [optionValIsDate]="1" [menuPlacement]="'bottom-left'"
+        (filterActiveCallback)="discardSelectedTickets(); discardNewTickets(); eventFilterUpdate($event, categoryFilter)"
+        (filterClearCallback)="discardSelectedTickets(); discardNewTickets(); eventFilterUpdate($event, categoryFilter)">
+      </app-filter-drop-down>
+    </div>
+  </div>
+  <table class="table table-hover">
+    <thead>
+      <th scope="col" class="table-header-action-item table-cell-sel-all">
+        <i class="fa fa-check-circle-o selected-all-table-icon" (click)="selectAll()"></i>
+      </th>
+      <!-- <th scope="col">Event</th> -->
+      <th scope="col">Event Information</th>
+      <th scope="col">Venue</th>
+      <th scope="col">Available To</th>
+      <th class="cell-centered" scope="col">Auto Approve</th>
+      <th scope="col">Ticket Category</th>
+      <th scope="col">Delivery Type</th>
+      <th scope="col">Seat Type</th>
+      <th scope="col">Section</th>
+      <th scope="col">Row</th>
+      <th scope="col">Seat</th>
+      <th scope="col">Status</th>
+    </thead>
+    <tbody class="table-content-sm">
+      <tr *ngFor="
+          let ticket of ticketService.tickets |
+          objectFilter: 'AssociatedEventNumber' : eventFilter.filterVal?(eventFilter.filterVal.EventNumber) : null : 'EQUALS' |
+          objectFilter: 'AssociatedTicketCategory' : categoryFilter.filterVal?(categoryFilter.filterVal) : null : 'EQUALS' |
+          paginate: { itemsPerPage: 10, currentPage: pageNbr }; let i = index" (click)="selectTicket(ticket)">
+        <td>
+          <i [ngClass]="{'fa-disabled': !ticket.selected}" class="fa fa-check-circle-o selected-table-icon"></i>
+        </td>
+        <td>
+          <ng-container *ngFor="let event of eventService.events">
+            <ng-container *ngIf="event.EventNumber==ticket.AssociatedEventNumber">
+              <!-- <span
+                ngbTooltip="{{ event.EventDateTime.date.replace(' ', 'T').split('.')[0] | date:'EEEE, M/d/y, h:mm a' }} {{ event.Name }}">
+                {{ event.EventDescription }}
+              </span> -->
+              <span>
+                {{ event.EventDescription }}<br>{{ event.EventDateTime.date.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y, h:mm a' }}
+              </span>
+            </ng-container>
+          </ng-container>
+        </td>
+        <td>{{ venueService.getVenueName(ticket.AssociatedVenueNumber) }}</td>
+        <td>{{ ticket.AvailableTo }}</td>
+        <td class="cell-centered cell-icon">
+          <i class="fa fa-check" [ngStyle]="{'opacity': ticket.AutoApprove=='Y' ? '1':'0.2'}"></i>
+        </td>
+        <td>{{ ticket.AssociatedTicketCategory }}</td>
+        <td>{{ ticket.TicketDeliveryType }}</td>
+        <!-- <td>{{ ticket.DeliveryType }}</td> -->
+        <td>{{ ticket.AssociatedSeatType }}</td>
+        <td>{{ ticket.Section }}</td>
+        <td>{{ ticket.Row }}</td>
+        <td>{{ ticket.Seat }}</td>
+        <td>{{ ticket.Status }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <pagination-controls autoHide="true" (pageChange)="pageNbr = $event"></pagination-controls>
+
+  <!-- New Tickets Modal -->
+  <ng-template #newTicketsModalObj let-c="close" let-d="dismiss">
+    <div class="modal-header">
+      <div class="col">
+        <div class="row">
+          <h4 class="modal-title">Add New Ticket(s)</h4>
+          <button type="button" class="close" aria-label="Close" (click)="discardNewTickets(); newTicketsModal.close()">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <!--use template-->
+        <div *ngIf="ticketTemplateUse == true" class="row prefill-container">
+          <div class="col-4">
+            <div class="form-group">
+              <label>Template</label>
+              <div>
+                <div #templateDropdown="ngbDropdown" ngbDropdown class="d-inline-block" placement="bottom-left">
+                  <button [ngClass]="{'invalid': !prefillTemplate, 'touched': prefillTemplate}"
+                   class="btn btn-custom-details btn-custom-details-sm" ngbDropdownToggle>
+                    {{ prefillTemplate ? prefillTemplate.TicketTemplateName: "Select Ticket Template" }}
+                  </button>
+                  <div ngbDropdownMenu class="dropdown-window-adjusted">
+                    <button ngbDropdownItem class="dropdown-item"
+                      *ngFor="let template of templateService.ticketTemplates; let i = index"
+                      (click)="prefillTemplate = template; templateDropdown.close(); loadPrefillTemplateInformation();">
+                      {{ template.TicketTemplateName }}
+                    </button>
+                  </div>
+                </div>
+                <!-- <button type="button" class="btn btn-sm btn-secondary btn-margin-left-10" (click)="prefillAddTicketForm()"
+                  [disabled]="!prefillTemplate">Prefill</button> -->
+              </div>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="selEventDescription && selEventDateTime" class="row row-event-info">
+          {{ selEventDescription }}
+          <br>
+          {{ selEventDateTime.date.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y @ h:mm a' }}
+        </div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <!-- <div class="container"> -->
+        <div class="row justify-content-around">
+          <div class="col-4">
+            <div class="form-group">
+              <label>Event</label>
+              <div>
+                <div #eventDropdown="ngbDropdown" ngbDropdown class="d-inline-block" placement="bottom-left">
+                  <button [ngClass]="{'invalid': !selEvent, 'touched': selEvent}"
+                    class="btn btn-sm btn-custom-details btn-modal-event-info" id="dropdownStatus" ngbDropdownToggle>
+                    {{ selEvent?(selEvent.EventNumber + " | " + selEvent.EventDescription): "Select Event Number" }}
+                  </button>
+                  <div ngbDropdownMenu aria-labelledby="dropdownUseReason" class="dropdown-window-adjusted">
+                    <button ngbDropdownItem class="dropdown-item" *ngFor="let event of eventService.events; let i = index"
+                      (click)="selectEventForTicket(event); eventDropdown.close()">
+                      {{ event.EventNumber }} | {{ event.EventDescription }} |
+                      {{ event.EventDateTime.date.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y, h:mm a' }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Ticket Category</label>
+              <div>
+                <div #categoryDropdown="ngbDropdown" ngbDropdown class="d-inline-block" placement="bottom-left">
+                  <button [ngClass]="{'invalid': !selEventCategory, 'touched': selEventCategory}"
+                    class="btn btn-sm btn-custom-details btn-modal-event-info" id="dropdownCategory" ngbDropdownToggle>
+                    {{ selEventCategory?(selEventCategory.Category): "Select Ticket Category" }}
+                  </button>
+                  <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+                    <button ngbDropdownItem class="dropdown-item" *ngFor="let category of eventService.eventCategories"
+                      (click)="setEventCategory(category); categoryDropdown.close()">
+                      {{ category.Category.trim() }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <br>
+            <div *ngIf="ticketTemplateUse == false">
+              <div class="row ticket-selection-title">
+                <i placement="top" ngbTooltip="Add additional ticket" class="fa fa-plus-circle add-ticket-btn"
+                  aria-hidden="true" (click)="initNewTickets(false)"></i>
+                <h5>({{ newTickets.length }}) {{ newTickets.length > 1 ? 'Tickets:' : 'Ticket:' }}</h5>
+              </div>
+              <span *ngIf="newTickets.length>1" (click)="preFillActive=!preFillActive"
+                [ngClass]="{'inactive': !preFillActive}" class="badge badge-primary prefill-badge" placement="top"
+                ngbTooltip="Ticket details of all tickets are linked with first ticket.">
+                Autofill active
+              </span>
+              <div class="list-group" id="new_tickets_list">
+                <a class="list-group-item list-group-item-action"
+                  (click)="selTicketIndex=ticket.newTicketIndex; selectTicketDetails(ticket.newTicketIndex)"
+                  data-toggle="list" href=""
+                  *ngFor="let ticket of newTickets | paginate: { id: 'pagination_new_ticket_list', itemsPerPage: newTicketsItemsPerPage, currentPage: newTicketsPageNbr }; let isFirst = first"
+                  [class.active]="ticket.newTicketIndex == selTicketIndex">
+                  <div class="d-flex w-100 justify-content-between ticket-heading">
+                    <h6 class="mb-1">Ticket #{{ ticket.newTicketIndex }}</h6>
+                    <i *ngIf="newTickets.length>1 && selTicketIndex==ticket.newTicketIndex"
+                      class="fa fa-times remove-ticket-btn" (click)="removeTicket(ticket.newTicketIndex)"
+                      aria-hidden="true"></i>
+                  </div>
+                  <p class="mb-1 ticket-tile-details">
+                    Section: {{ ticket.Section }}&nbsp;&nbsp;Row: {{ ticket.Row }}&nbsp;&nbsp;Seat: {{ ticket.Seat }}
+                  </p>
+                </a>
+              </div>
+              <pagination-controls class="modal-pagination" previousLabel="" nextLabel="" autoHide="true" responsive="true"
+                (pageChange)="newTicketsPageNbr = $event" id='pagination_new_ticket_list'>
+              </pagination-controls>
+            </div>
+            <div *ngIf="ticketTemplateUse == true">
+              <div class="list-group" id="prefill_tickets_list" *ngIf="prefillTemplate">
+                <a class="list-group-item list-group-item-action"
+                  [class.active]="(i + 1) + (newTicketsPageNbr-1) * newTicketsItemsPerPage == selTicketIndex"
+                  *ngFor="let prefillTicket of newTickets | paginate: { id: 'pagination_prefill_ticket_list', itemsPerPage: newTicketsItemsPerPage, currentPage: newTicketsPageNbr }; let i = index;"
+                  (click)="selTicketIndex = (i + 1) + (newTicketsPageNbr-1) * newTicketsItemsPerPage; reloadChangedTicketInformation(prefillTicket);"
+                   data-toggle="list" href="">
+                  <div class="d-flex w-100 justify-content-between ticket-heading">
+                    <h6 class="mb-1">Ticket #{{ (i + 1) + (newTicketsPageNbr-1) * newTicketsItemsPerPage }}</h6>
+                  </div>
+                  <p class="mb-1 ticket-tile-details">
+                    Section: {{ prefillTicket.formctrl_Section.value }}&nbsp;&nbsp;Row: {{ prefillTicket.formctrl_Row.value }}&nbsp;&nbsp;Seat: {{ prefillTicket.formctrl_Seat.value }}
+                  </p>
+                </a>
+              </div>
+              <pagination-controls class="modal-pagination" previousLabel="" nextLabel="" autoHide="true" responsive="true"
+                (pageChange)="newTicketsPageNbr = $event" id='pagination_prefill_ticket_list'>
+              </pagination-controls>
+            </div>
+          </div>
+          <div class="col-1 col-seperator"></div>
+          <div class="col offset-1">
+            <div class="tab-content" id="nav-tabContent">
+              <div>
+                <!-- <div class="tab-pane fade show" role="tabpanel"
+                *ngFor="let newTicket of newTickets; let isFirst = first; let isLast = last; let i = index"
+                [class.active]="newTicket.newTicketIndex == selTicketIndex"> -->
+                <div class="tab-pane fade show" role="tabpanel" [class.active]="newTicket.newTicketIndex == selTicketIndex">
+                  <br>
+                  <div class="row justify-content-between ticket-heading">
+                    <!-- <h5>Ticket #{{ newTicket.newTicketIndex }}</h5> -->
+                    <h5>Ticket #{{ selTicketIndex }}</h5>
+                  </div>
+                  <br>
+                  <div class="form-group">
+                    <label>Venue</label>
+                    <div>
+                      <div #venueDropdown="ngbDropdown" ngbDropdown class="d-inline-block" placement="bottom-left">
+                        <button [ngClass]="{'invalid': !newTicket.AssociatedVenueNumber, 'touched': newTicket.AssociatedVenueNumber}"
+                          class="btn btn-sm btn-custom-details btn-modal-event-info" id="dropdownCategory" ngbDropdownToggle>
+                          {{ newTicket.AssociatedVenueNumber?(venueService.getVenueName(newTicket.AssociatedVenueNumber)): "Select Venue" }}
+                        </button>
+                        <div *ngIf="ticketTemplateUse == true">
+                          <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+                            <button ngbDropdownItem class="dropdown-item" *ngFor="let venue of venueService.venues"
+                              (click)="newTicket.AssociatedVenueNumber = venue.VenueNumber; venueDropdown.close()">
+                              {{ venue.Name }}
+                            </button>
+                          </div>
+                        </div>
+                        <div *ngIf="ticketTemplateUse == false">
+                          <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+                            <button ngbDropdownItem class="dropdown-item" *ngFor="let venue of venueService.venues"
+                              (click)="newTicket.AssociatedVenueNumber = venue.VenueNumber; ticketDetailInputChange('', newTicket.newTicketIndex, 'AssociatedVenueNumber'); venueDropdown.close()">
+                              {{ venue.Name }}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label>Available To</label>
+                    <div>
+                      <div #availableToDropdown="ngbDropdown" ngbDropdown class="d-inline-block">
+                        <button [ngClass]="{'invalid': !newTicket.AvailableTo, 'touched': newTicket.AvailableTo}"
+                          class="btn btn-sm btn-custom-details" id="dropdownStatus" ngbDropdownToggle>
+                          {{ newTicket.AvailableTo?(newTicket.AvailableTo): "Select Availability" }}
+                        </button>
+                        <div *ngIf="ticketTemplateUse == true">
+                          <div ngbDropdownMenu aria-labelledby="dropdownUseReason" class="dropdown-window-adjusted">
+                            <button ngbDropdownItem class="dropdown-item"
+                              (click)="newTicket.AvailableTo='Everyone'; availableToDropdown.close()">Everyone</button>
+                            <button ngbDropdownItem class="dropdown-item"
+                              (click)="newTicket.AvailableTo='Associate'; availableToDropdown.close()">Associate</button>
+                            <button ngbDropdownItem class="dropdown-item"
+                              (click)="newTicket.AvailableTo='Partner'; availableToDropdown.close()">Partner</button>
+                            <button ngbDropdownItem class="dropdown-item"
+                              (click)="newTicket.AvailableTo='Section Head'; availableToDropdown.close()">Section
+                              Head</button>
+                            <button ngbDropdownItem class="dropdown-item"
+                              (click)="newTicket.AvailableTo='Administration'; availableToDropdown.close()">Administration</button>
+                          </div>
+                        </div>
+                        <div *ngIf="ticketTemplateUse == false">
+                          <div ngbDropdownMenu aria-labelledby="dropdownUseReason" class="dropdown-window-adjusted">
+                            <button ngbDropdownItem class="dropdown-item"
+                              (click)="newTicket.AvailableTo='Everyone'; ticketDetailInputChange('', newTicket.newTicketIndex, 'AvailableTo'); availableToDropdown.close()">Everyone</button>
+                            <button ngbDropdownItem class="dropdown-item"
+                              (click)="newTicket.AvailableTo='Associate'; ticketDetailInputChange('', newTicket.newTicketIndex, 'AvailableTo'); availableToDropdown.close()">Associate</button>
+                            <button ngbDropdownItem class="dropdown-item"
+                              (click)="newTicket.AvailableTo='Partner'; ticketDetailInputChange('', newTicket.newTicketIndex, 'AvailableTo'); availableToDropdown.close()">Partner</button>
+                            <button ngbDropdownItem class="dropdown-item"
+                              (click)="newTicket.AvailableTo='Section Head'; ticketDetailInputChange('', newTicket.newTicketIndex, 'AvailableTo'); availableToDropdown.close()">Section
+                              Head</button>
+                            <button ngbDropdownItem class="dropdown-item"
+                              (click)="newTicket.AvailableTo='Administration'; ticketDetailInputChange('', newTicket.newTicketIndex, 'AvailableTo'); availableToDropdown.close()">Administration</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label>Delivery Type</label>
+                    <div>
+                      <div #deliveryTypeDropdown="ngbDropdown" ngbDropdown class="d-inline-block">
+                        <button
+                          [ngClass]="{'invalid': !newTicket.TicketDeliveryType, 'touched': newTicket.TicketDeliveryType}"
+                          class="btn btn-sm btn-custom-details" id="dropdownStatus" ngbDropdownToggle>
+                          {{ newTicket.TicketDeliveryType?(newTicket.TicketDeliveryType):"Select Delivery Type" }}
+                        </button>
+                        <div *ngIf="ticketTemplateUse == true">
+                          <div ngbDropdownMenu aria-labelledby="dropdownUseReason" class="dropdown-window-adjusted">
+                            <button ngbDropdownItem class="dropdown-item"
+                              *ngFor="let deliveryType of ticketService.ticketDeliveryTypes; let i = index"
+                              (click)="newTicket.TicketDeliveryType=deliveryType.DeliveryType; deliveryTypeDropdown.close()">
+                              {{ deliveryType.DeliveryType }}
+                            </button>
+                          </div>
+                        </div>
+                        <div *ngIf="ticketTemplateUse == false">
+                          <div ngbDropdownMenu aria-labelledby="dropdownUseReason" class="dropdown-window-adjusted">
+                            <button ngbDropdownItem class="dropdown-item"
+                              *ngFor="let deliveryType of ticketService.ticketDeliveryTypes; let i = index"
+                              (click)="newTicket.TicketDeliveryType=deliveryType.DeliveryType; ticketDetailInputChange('', newTicket.newTicketIndex, 'DeliveryType'); deliveryTypeDropdown.close()">
+                              {{ deliveryType.DeliveryType }}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="">Auto Approval</label>
+                    <div
+                      (click)="newTicket.AutoApprove=='Y' ? newTicket.AutoApprove='N' : newTicket.AutoApprove='Y'; ticketDetailInputChange('', newTicket.newTicketIndex, 'AutoApprove')"
+                      class="auto-approval-container">
+                      <i class="fa fa-check-circle" [ngStyle]="{'opacity': newTicket.AutoApprove == 'Y' ? '1':'0.3'}"></i>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label>Seat Type</label>
+                    <div>
+                      <div #seatTypeDropdown="ngbDropdown" ngbDropdown class="d-inline-block">
+                        <button
+                          [ngClass]="{'invalid': !newTicket.AssociatedSeatType, 'touched': newTicket.AssociatedSeatType}"
+                          class="btn btn-sm btn-custom-details" id="dropdownStatus" ngbDropdownToggle>
+                          {{ newTicket.AssociatedSeatType?(newTicket.AssociatedSeatType):"Select Seat Type" }}
+                        </button>
+                        <div *ngIf="ticketTemplateUse == true">
+                          <div ngbDropdownMenu aria-labelledby="dropdownUseReason" class="dropdown-window-adjusted">
+                            <button ngbDropdownItem class="dropdown-item" *ngFor="let seatType of ticketService.seatTypes; let i = index"
+                              (click)="newTicket.AssociatedSeatType=seatType.SeatType; seatTypeDropdown.close()">
+                              {{ seatType.SeatType }}
+                            </button>
+                          </div>
+                        </div>
+                        <div *ngIf="ticketTemplateUse == false">
+                          <div ngbDropdownMenu aria-labelledby="dropdownUseReason" class="dropdown-window-adjusted">
+                            <button ngbDropdownItem class="dropdown-item" *ngFor="let seatType of ticketService.seatTypes; let i = index"
+                              (click)="newTicket.AssociatedSeatType=seatType.SeatType; ticketDetailInputChange('', newTicket.newTicketIndex, 'SeatType'); seatTypeDropdown.close()">
+                              {{ seatType.SeatType }}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="section">Section</label>
+                    <div *ngIf="ticketTemplateUse == true">
+                      <input [formControl]="newTicket.formctrl_Section"
+                      type="text" class="form-control tiny-input" maxlength="10" placeholder="Enter Section" name="section">
+                    </div>
+                    <div *ngIf="ticketTemplateUse == false">
+                      <input [formControl]="newTicket.formctrl_Section"
+                      (input)="ticketDetailInputChange($event.target.value, newTicket.newTicketIndex, 'Section')"
+                      type="text" class="form-control tiny-input" maxlength="10" placeholder="Enter Section" name="section">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="row">Row</label>
+                    <div *ngIf="ticketTemplateUse == true">
+                      <input [formControl]="newTicket.formctrl_Row" type="text"
+                      class="form-control tiny-input" maxlength="10" placeholder="Enter Row" name="row">
+                    </div>
+                    <div *ngIf="ticketTemplateUse == false">
+                      <input [formControl]="newTicket.formctrl_Row" type="text"
+                      (input)="ticketDetailInputChange($event.target.value, newTicket.newTicketIndex, 'Row')"
+                      class="form-control tiny-input" maxlength="10" placeholder="Enter Row" name="row">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="seat">Seat</label>
+                    <div *ngIf="ticketTemplateUse == true">
+                      <input [formControl]="newTicket.formctrl_Seat" type="text"
+                      class="form-control tiny-input" maxlength="10" placeholder="Enter Seat" name="seat">
+                    </div>
+                    <div *ngIf="ticketTemplateUse == false">
+                      <input [formControl]="newTicket.formctrl_Seat" type="text"
+                      (input)="ticketDetailInputChange($event.target.value, newTicket.newTicketIndex, 'Seat')"
+                      class="form-control tiny-input" maxlength="10" placeholder="Enter Seat" name="seat">
+                    </div>
+                  </div>
+                  <br>
+                  <!-- <div *ngIf="newTickets.length>1" class="fluid-row navigate-buttons-row">
+                    <span *ngIf="!isFirst" (click)="selectModalNewTicket(i-1)" class="navigate-buttons float-left">
+                      <i class="fa fa-arrow-left" aria-hidden="true"></i>&nbsp;&nbsp;Previous ticket
+                    </span>
+                    <span *ngIf="!isLast" (click)="selectModalNewTicket(i+1)" class="navigate-buttons float-right">
+                      Next ticket&nbsp;&nbsp;<i class="fa fa-arrow-right" aria-hidden="true"></i>
+                    </span>
+                  </div> -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary"
+        (click)="discardNewTickets(); newTicketsModal.close()">Close</button>
+      <button type="button" class="btn btn-primary" appNoDblClick (click)="addTicket()">Add {{ newTickets.length }}
+        {{ newTickets.length > 1 ? 'Tickets' : 'Ticket' }}</button>
+    </div>
+  </ng-template>
+
+  <!-- Edit Tickets Modal -->
+  <ng-template #editTicketsModalObj let-c="close" let-d="dismiss">
+    <div class="modal-header">
+      <div class="col">
+        <div class="row">
+          <h4 class="modal-title">Edit Ticket(s)</h4>
+          <button type="button" class="close" aria-label="Close"
+            (click)="discardSelectedTickets(); editTicketsModal.close()">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div *ngIf="selEventDescription && selEventDateTime" class="row row-event-info">
+          {{ selEventDescription }}
+          <br>
+          {{ selEventDateTime.date.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y @ h:mm a' }}
+        </div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="container">
+        <div class="row justify-content-around">
+          <div class="col-4">
+            <div class="form-group">
+              <label>Event</label>
+              <div>
+                <div #eventDropdown="ngbDropdown" ngbDropdown class="d-inline-block" placement="bottom-left">
+                  <button [ngClass]="{'invalid': !selEvent, 'touched': selEvent}"
+                    class="btn btn-sm btn-custom-details btn-modal-event-info" id="dropdownStatus" ngbDropdownToggle>
+                    {{ selEvent?(selEvent.EventNumber + " | " + selEvent.EventDescription): "Select Event Number" }}
+                  </button>
+                  <div ngbDropdownMenu aria-labelledby="dropdownUseReason" class="dropdown-window-adjusted">
+                    <button ngbDropdownItem class="dropdown-item" *ngFor="let event of eventService.events; let i = index"
+                      (click)="selectEventForTicket(event); eventDropdown.close()">
+                      {{ event.EventNumber }} | {{ event.EventDescription }} |
+                      {{ event.EventDateTime.date.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y, h:mm a' }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Ticket Category</label>
+              <div>
+                <div #categoryDropdown="ngbDropdown" ngbDropdown class="d-inline-block" placement="bottom-left">
+                  <button [ngClass]="{'invalid': !selEventCategory, 'touched': selEventCategory}"
+                    class="btn btn-sm btn-custom-details btn-modal-event-info" id="dropdownCategory" ngbDropdownToggle>
+                    {{ selEventCategory?(selEventCategory.Category): "Select Ticket Category" }}
+                  </button>
+                  <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+                    <button ngbDropdownItem class="dropdown-item" *ngFor="let category of eventService.eventCategories"
+                      (click)="setEventCategory(category); categoryDropdown.close()">
+                      {{ category.Category.trim() }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <br>
+            <div class="row">
+              <h5>({{ editedTickets.length }}) {{ editedTickets.length > 1 ? 'Tickets:' : 'Ticket:' }}</h5>
+            </div>
+            <br>
+            <div class="list-group">
+              <a class="list-group-item list-group-item-action" (click)="selTicketIndex=ticket.newTicketIndex"
+                data-toggle="list" href=""
+                *ngFor="let ticket of editedTickets | paginate: { id: 'pagination_edited_ticket_list', itemsPerPage: editedTicketsItemsPerPage, currentPage: editedTicketsPageNbr }; let isFirst = first"
+                [class.active]="ticket.newTicketIndex == selTicketIndex">
+                <div class="d-flex w-100 justify-content-between ticket-heading">
+                  <h6 class="mb-1">Ticket #{{ ticket.newTicketIndex }}</h6>
+                </div>
+                <p class="mb-1 ticket-tile-details">
+                  Section: {{ ticket.formctrl_Section.value }}&nbsp;Row: {{ ticket.formctrl_Row.value }}&nbsp;Seat:
+                  {{ ticket.formctrl_Seat.value }}
+                </p>
+              </a>
+            </div>
+            <pagination-controls class="modal-pagination" previousLabel="" nextLabel="" autoHide="true" responsive="true"
+              (pageChange)="editedTicketsPageNbr = $event" id='pagination_edited_ticket_list'></pagination-controls>
+          </div>
+          <div class="col-1 col-seperator"></div>
+          <div class="col offset-1">
+            <div class="tab-content" id="nav-tabContent">
+              <div class="tab-pane fade show"
+                *ngFor="let editedTicket of editedTickets; let isFirst = first; let isLast = last; let i = index"
+                [class.active]="editedTicket.newTicketIndex == selTicketIndex">
+                <br>
+                <div class="row justify-content-between ticket-heading">
+                  <h5>Ticket #{{ editedTicket.newTicketIndex }}</h5>
+                </div>
+                <br>
+                <div class="form-group">
+                  <label>Venue</label>
+                  <div>
+                    <div #venueDropdown="ngbDropdown" ngbDropdown class="d-inline-block" placement="bottom-left">
+                      <button [ngClass]="{'invalid': !editedTicket.AssociatedVenueNumber, 'touched': editedTicket.AssociatedVenueNumber}"
+                        class="btn btn-sm btn-custom-details btn-modal-event-info" id="dropdownCategory" ngbDropdownToggle>
+                        {{ editedTicket.AssociatedVenueNumber?(venueService.getVenueName(editedTicket.AssociatedVenueNumber)): "Select Venue" }}
+                      </button>
+                      <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+                        <button ngbDropdownItem class="dropdown-item" *ngFor="let venue of venueService.venues"
+                          (click)="editedTicket.AssociatedVenueNumber = venue.VenueNumber; venueDropdown.close()">
+                          {{ venue.Name }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Available To</label>
+                  <div>
+                    <div #availableToDropdown="ngbDropdown" ngbDropdown class="d-inline-block">
+                      <button class="btn btn-sm btn-custom-details" id="dropdownStatus" ngbDropdownToggle>
+                        {{ editedTicket.AvailableTo}}
+                      </button>
+                      <div ngbDropdownMenu aria-labelledby="dropdownUseReason" class="dropdown-window-adjusted">
+                        <button ngbDropdownItem class="dropdown-item" (click)="editedTicket.AvailableTo='Everyone'; availableToDropdown.close()">Everyone</button>
+                        <button ngbDropdownItem class="dropdown-item" (click)="editedTicket.AvailableTo='Associate'; availableToDropdown.close()">Associate</button>
+                        <button ngbDropdownItem class="dropdown-item" (click)="editedTicket.AvailableTo='Partner'; availableToDropdown.close()">Partner</button>
+                        <button ngbDropdownItem class="dropdown-item" (click)="editedTicket.AvailableTo='Section Head'; availableToDropdown.close()">Section
+                          Head</button>
+                        <button ngbDropdownItem class="dropdown-item"
+                          (click)="editedTicket.AvailableTo='Administration'; availableToDropdown.close()">Administration</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Delivery Type</label>
+                  <div>
+                    <div #deliveryTypeDropdown="ngbDropdown" ngbDropdown class="d-inline-block">
+                      <button
+                        [ngClass]="{'invalid': !editedTicket.TicketDeliveryType, 'touched': editedTicket.TicketDeliveryType}"
+                        class="btn btn-sm btn-custom-details" id="dropdownStatus" ngbDropdownToggle>
+                        {{ editedTicket.TicketDeliveryType?(editedTicket.TicketDeliveryType):"Select Delivery Type" }}
+                      </button>
+                      <div ngbDropdownMenu class="dropdown-window-adjusted">
+                        <button ngbDropdownItem class="dropdown-item" *ngFor="let deliveryType of ticketService.ticketDeliveryTypes"
+                          (click)="editedTicket.TicketDeliveryType=deliveryType.DeliveryType; deliveryTypeDropdown.close()">
+                          {{ deliveryType.DeliveryType }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="">Auto Approval</label>
+                  <div
+                    (click)="editedTicket.AutoApprove=='Y' ? editedTicket.AutoApprove='N' : editedTicket.AutoApprove='Y'"
+                    class="auto-approval-container">
+                    <i class="fa fa-check-circle"
+                      [ngStyle]="{'opacity': editedTicket.AutoApprove == 'Y' ? '1':'0.3'}"></i>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Seat Type</label>
+                  <div>
+                    <div #seatTypeDropdown="ngbDropdown" ngbDropdown class="d-inline-block">
+                      <button
+                        [ngClass]="{'invalid': !editedTicket.AssociatedSeatType, 'touched': editedTicket.AssociatedSeatType}"
+                        class="btn btn-sm btn-custom-details" id="dropdownStatus" ngbDropdownToggle>
+                        {{ editedTicket.AssociatedSeatType?(editedTicket.AssociatedSeatType):"Select Seat Type" }}
+                      </button>
+                      <div ngbDropdownMenu aria-labelledby="dropdownUseReason" class="dropdown-window-adjusted">
+                        <button ngbDropdownItem class="dropdown-item" *ngFor="let seatType of ticketService.seatTypes; let i = index"
+                          (click)="editedTicket.AssociatedSeatType=seatType.SeatType; seatTypeDropdown.close()">
+                          {{ seatType.SeatType }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="section">Section</label>
+                  <input [formControl]="editedTicket.formctrl_Section" type="text" class="form-control tiny-input"
+                    maxlength="10" name="section" placeholder="Enter Section">
+                </div>
+                <div class="form-group">
+                  <label for="row">Row</label>
+                  <input [formControl]="editedTicket.formctrl_Row" type="text" class="form-control tiny-input"
+                    maxlength="10" name="row" placeholder="Enter Row">
+                </div>
+                <div class="form-group">
+                  <label for="seat">Seat</label>
+                  <input [formControl]="editedTicket.formctrl_Seat" type="text" class="form-control tiny-input"
+                    maxlength="10" name="seat" placeholder="Enter Seat">
+                </div>
+                <br>
+                <div *ngIf="selectedTickets.length>1" class="fluid-row navigate-buttons-row">
+                  <span *ngIf="!isFirst" (click)="selectModalEditedTicket(i-1);" class="navigate-buttons float-left">
+                    <i class="fa fa-arrow-left" aria-hidden="true"></i>&nbsp;&nbsp;Previous ticket
+                  </span>
+                  <span *ngIf="!isLast" (click)="selectModalEditedTicket(i+1);" class="navigate-buttons float-right">
+                    Next ticket&nbsp;&nbsp;<i class="fa fa-arrow-right" aria-hidden="true"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-dismiss="modal"
+        (click)="discardSelectedTickets(); editTicketsModal.close()">Close</button>
+      <button type="button" class="btn btn-primary" appNoDblClick (click)="editTickets()">Edit
+        {{ selectedTickets.length }} {{ selectedTickets.length > 1 ? 'Tickets' : 'Ticket' }}
+      </button>
+    </div>
+  </ng-template>
+</div>

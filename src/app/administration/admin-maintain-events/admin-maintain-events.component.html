@@ -1,0 +1,361 @@
+<div class="container">
+  <div class="row-fluid table-top-bar">
+    <button type="button" class="btn btn-secondary float-right add-user-btn"
+      (click)="addEventOrEventTemplate();">
+      <i class="fa fa-calendar"></i> &nbsp;Add Event
+    </button>
+    <div class="combobox-container float-left">
+      <app-filter-drop-down #categoryFilter [filterName]="'Category'" [filterOptionList]="eventService.eventCategoriesFilled">
+      </app-filter-drop-down>
+    </div>
+    <div class="combobox-container float-left">
+      <app-filter-drop-down #statusFilter [filterName]="'Status'" [filterOptionList]="eventService.statusList">
+      </app-filter-drop-down>
+    </div>
+  </div>
+  <table class="table table-hover">
+    <thead>
+      <th scope="col">#</th>
+      <th scope="col">Category</th>
+      <!-- <th scope="col">Title/Description</th>
+      <th scope="col">Date & Time</th> -->
+      <th scope="col">Event Information</th>
+      <th scope="col">Venue</th>
+      <th scope="col">Status</th>
+      <th scope="col">
+        <!--Edit-->
+      </th>
+      <th scope="col">
+        <!--Delete-->
+      </th>
+    </thead>
+    <tbody class="table-content-sm">
+      <tr *ngFor="let event of eventService.events |
+        objectFilter: 'AssociatedTicketCategory' : categoryFilter.filterVal?(categoryFilter.filterVal) : null : 'EQUALS' |
+        objectFilter: 'Status' : statusFilter.filterVal?(statusFilter.filterVal) : null : 'EQUALS' |
+        paginate: { itemsPerPage: 10, currentPage: pageNbr }; let i = index">
+        <td>{{ event.EventNumber }}</td>
+        <td>{{ event.AssociatedTicketCategory }}</td>
+        <!-- <td>{{ event.EventDescription }}</td>
+        <td>{{ event.EventDateTime.date.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y, h:mm a' }}</td> -->
+        <td>
+          {{ event.EventDescription }}<br>{{ event.EventDateTime.date.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y, h:mm a' }}
+        </td>
+        <td>{{ event.Name }}</td>
+        <td>{{ event.Status }}</td>
+        <td>
+          <button type="button" class="btn btn-sm btn-secondary"
+            (click)="editEvent(event.EventNumber); openModal('editEventModal', editEventModalObj)">Edit</button>
+        </td>
+        <td>
+          <button type="button" class="btn btn-sm btn-danger" (click)="deleteEvent(event.EventNumber)">Delete</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <pagination-controls autoHide="true" (pageChange)="pageNbr = $event"></pagination-controls>
+
+  <!-- New Event Modal -->
+  <ng-template #newEventModalObj let-c="close" let-d="dismiss">
+    <div class="modal-header">
+      <div class="col">
+        <div class="row">
+          <h4 class="modal-title">Add New Event</h4>
+          <button type="button" class="close" (click)="newEventModal.close()" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="container">
+        <div class="form-group">
+          <label>Status</label>
+          <div>
+            <div #statusDropdown="ngbDropdown" ngbDropdown class="d-inline-block">
+              <button class="btn btn-sm btn-custom-details" id="dropdownStatus" ngbDropdownToggle>
+                {{ newEvent.Status }}
+              </button>
+              <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+                <button ngbDropdownItem class="dropdown-item"
+                  (click)="newEvent.Status='AVAILABLE'; statusDropdown.close()">AVAILABLE</button>
+                <button ngbDropdownItem class="dropdown-item"
+                  (click)="newEvent.Status='NOT AVAILABLE'; statusDropdown.close()">NOT AVAILABLE</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <div>
+            <div #categoryDropdown="ngbDropdown" ngbDropdown class="d-inline-block">
+              <button ngbDropdownItem
+                [ngClass]="{'invalid': !newEvent.AssociatedTicketCategory, 'touched': newEvent.AssociatedTicketCategory}"
+                class="btn btn-sm btn-custom-details" id="dropdownCategory" ngbDropdownToggle>
+                {{ newEvent.AssociatedTicketCategory?(newEvent.AssociatedTicketCategory):"Select Category" }}
+              </button>
+              <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+                <button ngbDropdownItem class="dropdown-item" *ngFor="let category of eventService.eventCategories"
+                  (click)="newEvent.AssociatedTicketCategory=category.Category.trim(); preFillTitleFromCategory(category.Category.trim()); categoryDropdown.close()">
+                  {{ category.Category.trim() }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Venue</label>
+          <div>
+            <div #venueDropdown="ngbDropdown" ngbDropdown class="d-inline-block">
+              <button [ngClass]="{'invalid': newEvent.SelectedVenueIndex<0, 'touched': newEvent.SelectedVenueIndex}"
+                class="btn btn-sm btn-custom-details" id="dropdownVenue" ngbDropdownToggle>
+                {{ newEvent.SelectedVenueIndex>-1?(venueService.venues[newEvent.SelectedVenueIndex].Name):"Select Venue" }}
+              </button>
+              <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+                <button ngbDropdownItem class="dropdown-item" *ngFor="let venue of venueService.venues; let i = index"
+                  (click)="newEvent.SelectedVenueIndex=i; venueDropdown.close()">{{ venue.Name.trim() }}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Title/Description</label>
+          <input [formControl]="newEvent.formctrl_eventTitle" type="text" class="form-control" maxlength="80"
+            name="userName" placeholder="Enter Event Title/Description">
+        </div>
+        <div class="form-group">
+          <label>Date and Time</label>
+          <div class="form-group-calendar-input" [formGroup]="newEvent.formgrp_eventDateTime">
+            <p-calendar class="calendar-input-invalid" dataType="string" formControlName="formctrl_eventDateTime"
+              readonlyInput="true" dateFormat="DD, mm/dd/yy," showTime="true" hourFormat="12"
+              placeholder="Select Date and Time">
+            </p-calendar>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="newEventModal.close()">Close</button>
+      <button type="button" class="btn btn-primary" appNoDblClick (click)="addEvent()">Add Event</button>
+    </div>
+  </ng-template>
+
+  <!-- Edit Event Modal -->
+  <ng-template #editEventModalObj let-c="close" let-d="dismiss">
+    <div class="modal-header">
+      <div class="col">
+        <div class="row">
+          <h4 class="modal-title">Edit Event</h4>
+          <button type="button" class="close" (click)="editEventModal.close()" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="container">
+        <div class="form-group">
+          <label>Status</label>
+          <div>
+            <div #statusDropdown="ngbDropdown" ngbDropdown class="d-inline-block">
+              <button class="btn btn-sm btn-custom-details" id="dropdownStatus" ngbDropdownToggle>
+                {{ editedEvent.Status }}
+              </button>
+              <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+                <button ngbDropdownItem class="dropdown-item"
+                  (click)="editedEvent.Status='AVAILABLE'; statusDropdown.close()">AVAILABLE</button>
+                <button ngbDropdownItem class="dropdown-item"
+                  (click)="editedEvent.Status='NOT AVAILABLE'; statusDropdown.close()">NOT
+                  AVAILABLE</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <div>
+            <div #categoryDropdown="ngbDropdown" ngbDropdown class="d-inline-block">
+              <button class="btn btn-sm btn-custom-details" id="dropdownCategory" ngbDropdownToggle>
+                {{ editedEvent.AssociatedTicketCategory?(editedEvent.AssociatedTicketCategory):"Select Category" }}
+              </button>
+              <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+                <button ngbDropdownItem class="dropdown-item" *ngFor="let category of eventService.eventCategories"
+                  (click)="editedEvent.AssociatedTicketCategory=category.Category.trim(); categoryDropdown.close()">
+                  {{ category.Category.trim() }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Venue</label>
+          <div>
+            <div #venueDropdown="ngbDropdown" ngbDropdown class="d-inline-block">
+              <button class="btn btn-sm btn-custom-details" id="dropdownVenue" ngbDropdownToggle>
+                {{ editedEvent.SelectedVenueIndex>-1?(venueService.venues[editedEvent.SelectedVenueIndex].Name):"Select Venue" }}
+              </button>
+              <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+                <button ngbDropdownItem class="dropdown-item" *ngFor="let venue of venueService.venues; let i = index"
+                  (click)="editedEvent.SelectedVenueIndex=i; venueDropdown.close()">{{ venue.Name.trim() }}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="userName">Title/Description</label>
+          <input [formControl]="editedEvent.formctrl_eventTitle" type="text" class="form-control" maxlength="80"
+            name="userName" placeholder="Enter Event Title/Description">
+        </div>
+        <div class="form-group">
+          <label>Date and Time</label>
+          <div class="form-group-calendar-input" [formGroup]="editedEvent.formgrp_eventDateTime">
+            <p-calendar class="calendar-input-invalid" dataType="string" formControlName="formctrl_eventDateTime"
+              readonlyInput="true" dateFormat="DD, mm/dd/yy," showTime="true" hourFormat="12"
+              placeholder="Select Date and Time">
+            </p-calendar>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="editEventModal.close()">Discard</button>
+      <button type="button" class="btn btn-primary" appNoDblClick (click)="updateEvent()">Edit Event</button>
+    </div>
+  </ng-template>
+
+  <!-- New Event Template Modal -->
+  <ng-template #newEventTemplateModalObj let-c="close" let-d="dismiss">
+    <div class="modal-header">
+      <div class="col">
+        <div class="row">
+          <h4 class="modal-title">Select a Template</h4>
+          <button type="button" class="close" aria-label="Close" (click)="newEventTemplateModal.close()">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="row justify-content-around">
+        <div class="col-4">
+          <div>
+            <div class="form-group">
+              <label>Template</label>
+              <div>
+                <div #eventTemplateDropdown="ngbDropdown" ngbDropdown class="d-inline-block" placement="bottom-left">
+                  <button ngbDropdownItem
+                    [ngClass]="{'invalid': !selectedTemplate, 'touched': selectedTemplate}"
+                    class="btn btn-sm btn-custom-details" id="eventTemplateDropdown" ngbDropdownToggle>
+                    {{ selectedTemplate ? selectedTemplate.EventTemplateName: "Select Event Template" }}
+                  </button>
+                  <div ngbDropdownMenu class="dropdown-window-adjusted">
+                    <button ngbDropdownItem class="dropdown-item" *ngFor="let template of templateService.eventTemplates; let i = index"
+                      (click)="selectedTemplate = template; eventTemplateDropdown.close(); loadSelectTemplateInformation(selectedTemplate);">
+                      {{ template.EventTemplateName }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="list-group">
+              <a class="list-group-item list-group-item-action"
+              [class.active]="(i + 1) + (eventsPageNumber - 1) * eventsPerPage == selectedEventIndex"
+                *ngFor="let selectedEvent of newEvents | paginate: { id: 'pagination_event_template', itemsPerPage: eventsPerPage, currentPage: eventsPageNumber }; let i = index;"
+                (click)="selectedEventIndex = (i + 1) + (eventsPageNumber - 1) * eventsPerPage; reloadSelectedEventData(selectedEvent);"
+                 data-toggle="list" href="">
+                <div class="d-flex w-100 justify-content-between event-heading">
+                  <h6 class="mb-1">Event #{{ (i + 1) + (eventsPageNumber - 1) * eventsPerPage }}</h6>
+                </div>
+              </a>
+            </div>
+            <pagination-controls class="modal-pagination" previousLabel="" nextLabel="" autoHide="true" responsive="true"
+              (pageChange)="eventsPageNumber = $event" id='pagination_event_template'>
+            </pagination-controls>
+          </div>
+        </div>
+        <div class="col-1 col-seperator"></div>
+        <div class="col offset-1">
+          <div class="tab-content" id="nav-tabContent">
+            <div class="row justify-content-between event-heading">
+              <h5>Event #{{ selectedEventIndex }}</h5>
+            </div>
+            <div class="form-group">
+              <label>Status</label>
+              <div>
+                <div #statusDropdownOfTemplate="ngbDropdown" ngbDropdown class="d-inline-block">
+                  <button class="btn btn-sm btn-custom-details" id="dropdownStatusOfTemplate" ngbDropdownToggle>
+                    {{ newEventForTemplate.Status ? newEventForTemplate.Status : "Select Status" }}
+                  </button>
+                  <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+                    <button ngbDropdownItem class="dropdown-item"
+                      (click)="newEventForTemplate.Status='AVAILABLE'; statusDropdownOfTemplate.close()">
+                      AVAILABLE
+                    </button>
+                    <button ngbDropdownItem class="dropdown-item"
+                      (click)="newEventForTemplate.Status='NOT AVAILABLE'; statusDropdownOfTemplate.close()">
+                      NOT AVAILABLE
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Category</label>
+              <div>
+                <div #categoryDropdownOfTemplate="ngbDropdown" ngbDropdown class="d-inline-block">
+                  <button ngbDropdownItem
+                    [ngClass]="{'invalid': !newEventForTemplate.RelativeCategory, 'touched': newEventForTemplate.RelativeCategory}"
+                    class="btn btn-sm btn-custom-details" id="dropdownCategoryOfTemplate" ngbDropdownToggle>
+                    {{ newEventForTemplate.RelativeCategory ? newEventForTemplate.RelativeCategory : "Select Category" }}
+                  </button>
+                  <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+                    <button ngbDropdownItem class="dropdown-item" *ngFor="let category of eventService.eventCategories"
+                      (click)="newEventForTemplate.RelativeCategory = category.Category.trim(); categoryDropdownOfTemplate.close()">
+                      {{ category.Category.trim() }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Venue</label>
+              <div>
+                <div #venueDropdownOfTemplate="ngbDropdown" ngbDropdown class="d-inline-block">
+                  <button ngbDropdownItem  [ngClass]="{'invalid': newEventForTemplate.RelativeVenueNumber < 0, 'touched': newEventForTemplate.RelativeVenueNumber}"
+                    class="btn btn-sm btn-custom-details" id="dropdownCategoryOfTemplate" ngbDropdownToggle>
+                    {{ newEventForTemplate.RelativeVenueNumber > -1 ? newEventForTemplate.VenueName : "Select Venue" }}
+                  </button>
+                  <div ngbDropdownMenu aria-labelledby="dropdownUseReason">
+                    <button ngbDropdownItem class="dropdown-item" *ngFor="let venue of venueService.venues;"
+                      (click)="newEventForTemplate.RelativeVenueNumber = venue.VenueNumber; newEventForTemplate.VenueName = venue.Name; venueDropdownOfTemplate.close()">
+                      {{ venue.Name.trim() }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Title/Description</label>
+              <input [formControl]="newEventForTemplate.formctrl_TitleDescription" type="text" class="form-control" maxlength="80"
+                name="userName" placeholder="Enter Event Title/Description">
+            </div>
+            <div class="form-group">
+              <label>Date and Time</label>
+              <div class="form-group-calendar-input">
+                <p-calendar class="calendar-input-invalid" dataType="string"
+                  [required]="newEventForTemplate.DateAndTime" [(ngModel)]="newEventForTemplate.calendar_DateAndTime"
+                  readonlyInput="true" dateFormat="DD, mm/dd/yy," showTime="true" hourFormat="12"
+                  placeholder="Select Date and Time">
+                </p-calendar>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="discardEventTemplate(); newEventTemplateModal.close()">Close</button>
+      <button type="button" class="btn btn-primary" appNoDblClick (click)="addEventsOfTemplate()">Add Events</button>
+    </div>
+  </ng-template>
+</div>

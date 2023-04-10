@@ -1,0 +1,13 @@
+<div class="main-content">
+  <div class="container">
+    <nav aria-label="breadcrumb" [ngStyle]="{'display': router.url === '/administration/overview' ? 'none' : 'block'}">
+      <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a routerLink="../administration">Administration</a></li>
+          <li class="breadcrumb-item" *ngFor="let breadcrumb of breadcrumbs">
+              {{ breadcrumb.label }}
+          </li>
+      </ol>
+    </nav>
+  </div>
+  <router-outlet></router-outlet>
+</div>

@@ -1,0 +1,223 @@
+<div class="container-fluid main-content">
+  <div class="row header-row justify-content-between">
+    <h5 class="d-none d-lg-block">
+      <span *ngIf="userService.curUser.userAccount==userService.selUser.userAccount;else otherSelUser">
+        Your Special Ticket Requests
+      </span>
+      <ng-template #otherSelUser>
+        Special Ticket Requests for {{ userService.selUser.userName }} ({{userService.selUser.userAccount}})
+      </ng-template>
+    </h5>
+    <span class="d-block d-lg-none float-left title-container"> 
+      <h5>
+        <span *ngIf="userService.curUser.userAccount==userService.selUser.userAccount;else otherSelUserMobile">
+          Your Special Requests
+        </span>
+        <ng-template #otherSelUserMobile>
+          Special Requests for 
+        </ng-template>
+      </h5>
+      <span *ngIf="userService.curUser.userAccount!=userService.selUser.userAccount">
+        {{ userService.selUser.userName }} ({{userService.selUser.userAccount}})
+      </span>
+    </span>
+    <!-- Desktop -->
+    <button type="button" class="d-none d-lg-block btn btn-secondary" (click)="initNewSpecialRequest(); openModal('addSpecialRequestModal', addSpecialRequestModalObj)">
+      <i class="fa fa-ticket"></i> &nbsp;Add Special Request
+    </button>
+    <!-- Mobile -->
+    <button type="button" class="d-block d-lg-none btn btn-sm btn-secondary" (click)="initNewSpecialRequest(); openModal('addSpecialRequestModal', addSpecialRequestModalObj)">
+      <i class="fa fa-plus"></i>
+    </button>
+  </div>
+  <div *ngIf="mobileSelectedRequestIndex>-1" class="d-block d-md-none mobile-action-btn">
+    <button 
+      (click)="selectedRequestIndex=mobileSelectedRequestIndex; openModal('requestDetailsModal', requestDetailsModalObj);"
+      type="button" 
+      class="btn btn-dark btn-block">
+      Details
+    </button>
+    <button 
+      *ngIf="specialRequestService.specialTicketRequests[mobileSelectedRequestIndex].Status != 'COMPLETED' && specialRequestService.specialTicketRequests[mobileSelectedRequestIndex].Status != 'CANCELLED'" 
+      (click)="initNewRequestReply(mobileSelectedRequestIndex, true); openModal('addRequestReplyModal', addRequestReplyModalObj);"
+      type="button" 
+      class="btn btn-primary btn-block">
+      Reply
+    </button>
+    <button 
+      *ngIf="specialRequestService.specialTicketRequests[mobileSelectedRequestIndex].Status != 'COMPLETED' && specialRequestService.specialTicketRequests[mobileSelectedRequestIndex].Status != 'CANCELLED'" 
+      type="button" 
+      class="btn btn-danger btn-block" 
+      (click)="cancelRequest(mobileSelectedRequestIndex, true)">
+      Cancel
+    </button>
+  </div>
+  <div class="row justify-content-center">
+    <table class="table table-requests">
+      <thead>
+        <tr class="mobile-table-header">
+          <th scope="col"><span class="d-none d-md-block">Status</span></th>
+          <th scope="col">Title</th>
+          <th scope="col">Request Date</th>
+          <th scope="col" class="d-none d-lg-table-cell">Requested By</th>
+          <th scope="col" class="d-none d-lg-table-cell">Created By</th>
+          <th scope="col" class="d-none d-md-table-cell"><!--Details--></th>
+          <th scope="col" class="d-none d-md-table-cell"><!--Edit--></th>
+          <th scope="col" class="d-none d-md-table-cell"><!--Cancel--></th>
+        </tr>
+      </thead>
+      <tbody class="table-content-sm">
+        <tr *ngFor="let request of specialRequestService.specialTicketRequests 
+          | objectFilter: 'RequestedBy' : userService.selUser.userAccount : 'EQUALS' 
+          | objectFilter: 'Status' : 'CANCELLED' : 'IS_NOT' 
+          | paginate: { itemsPerPage: 10, currentPage: pageNbr }; let i = index" 
+          (click)="selectRequest(request.SpecialRequestNumber)" 
+          [ngClass]="{'mobile-ticket-table-sel': request.selected}"
+        >
+          <td class="">
+            <i placement="right" ngbTooltip="Request completed" *ngIf="request.Status=='APPROVED'" class="fa fa-check-square-o fa-approved selected-table-icon"></i>
+            <i placement="right" ngbTooltip="Request denied" *ngIf="request.Status=='NOT APPROVED'" class="fa fa-ban fa-approved selected-table-icon"></i>
+            <i placement="right" ngbTooltip="Request submitted/in process" *ngIf="request.Status=='SUBMITTED' || request.Status=='IN PROCESS'" class="fa fa-hourglass-half fa-pending selected-table-icon"></i>
+          </td>
+          <td>{{ request.RequestTitle }}</td>
+          <td>{{ request.RequestDateTime.date.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y, h:mm a' }}</td>
+          <td class="d-none d-lg-table-cell">{{ request.RequestedBy }}</td>
+          <td class="d-none d-lg-table-cell">{{ request.CreatedBy }}</td>
+          <td class="d-none d-md-table-cell">
+            <button type="button" class="btn btn-sm btn-secondary" (click)="selectRequest(request.SpecialRequestNumber); openModal('requestDetailsModal', requestDetailsModalObj);">Details</button>
+          </td>
+          <td class="d-none d-md-table-cell">
+            <button *ngIf="request.Status != 'COMPLETED' && request.Status != 'CANCELLED'" type="button" class="btn btn-sm btn-info" (click)="initNewRequestReply(request.SpecialRequestNumber, false); openModal('addRequestReplyModal', addRequestReplyModalObj);">Reply</button>
+          </td>
+          <td class="d-none d-md-table-cell">
+            <button *ngIf="request.Status != 'COMPLETED' && request.Status != 'CANCELLED'" type="button" class="btn btn-sm btn-danger" (click)="cancelRequest(request.SpecialRequestNumber, false)">Cancel</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <pagination-controls autoHide="true" responsive="true" (pageChange)="pageNbr = $event"></pagination-controls>
+  </div>
+</div>
+
+<!-- Add special request modal -->
+<ng-template class="modal-dialog" #addSpecialRequestModalObj let-c="close" let-d="dismiss">
+  <div class="modal-header">
+    <div class="col">
+      <div class="row">
+        <h4 class="modal-title">Add 
+          <span *ngIf="userService.curUser.userAccount==userService.selUser.userAccount;else otherUser">special ticket request</span>
+          <ng-template #otherUser>special ticket request for {{ userService.selUser.userName }} ({{userService.selUser.userAccount}})</ng-template>
+            ...
+        </h4>
+        <button type="button" class="d-none d-md-block close" (click)="addSpecialRequestModal.close()" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="modal-body">
+    <div class="container">
+      <div class="form-group">
+        <label for="requestTitle">Title</label>
+        <input 
+          name="requestTitle"
+          [formControl]="newSpecialRequest.formctrl_title" 
+          type="text" 
+          class="form-control" 
+          maxlength="80" 
+          placeholder="Title"
+        >
+      </div>
+      <div class="form-group">
+        <label for="requestDescription">Description</label>
+        <textarea rows='6' 
+          name="requestDescription"
+          [formControl]="newSpecialRequest.formctrl_description" 
+          type="text" 
+          class="form-control" 
+          maxlength="256" 
+          placeholder="Description">
+        </textarea>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="addSpecialRequestModal.close()">Discard</button>
+    <button type="button" class="btn btn-primary" appNoDblClick (click)="addNewSpecialRequest()">
+      <span class="d-none d-md-block">Submit Special Ticket Request</span>
+      <span class="d-block d-md-none">Submit Request</span>
+    </button>
+  </div>
+</ng-template>
+
+<!-- Add request reply modal -->
+<ng-template class="modal-dialog" #addRequestReplyModalObj let-c="close" let-d="dismiss">
+    <div class="modal-header">
+      <div class="col">
+        <div class="row">
+          <h4 class="modal-title">Add 
+            <span *ngIf="userService.curUser.userAccount==userService.selUser.userAccount;else otherUser">reply</span>
+            <ng-template #otherUser>reply for {{ userService.selUser.userName }} ({{userService.selUser.userAccount}})</ng-template>
+              ...
+          </h4>
+          <button type="button" class="close d-none d-md-block" (click)="addRequestReplyModal.close()" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="container">
+        <div class="form-group">
+          <label for="userName">Content</label>
+          <textarea 
+            rows='6' 
+            [formControl]="newRequestReply.formctrl_replyText" 
+            type="text" 
+            class="form-control" 
+            maxlength="256" 
+            placeholder="Enter text">
+          </textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="addRequestReplyModal.close()">Discard</button>
+      <button type="button" class="btn btn-primary" appNoDblClick (click)="addNewRequestReply()">Add Reply</button>
+    </div>
+  </ng-template>
+
+<!-- Requests Details Modal (Desktop/Mobile) -->
+<ng-template #requestDetailsModalObj let-c="close" let-d="dismiss">
+  <div class="modal-header">
+    <div class="col">
+      <div class="row">
+        <h5 class="modal-title">Request Details</h5>
+        <button type="button" class="d-none d-md-block close" (click)="requestDetailsModal.close()" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="modal-body">
+    <span class="badge badge-secondary">{{ specialRequestService.specialTicketRequests[selectedRequestIndex].Status }}</span>
+    <p class="details-modal-entry">
+      <b>Title:</b><br>
+      {{ specialRequestService.specialTicketRequests[selectedRequestIndex].RequestTitle }}
+    <p class="details-modal-entry">
+      <b class="add-info-title">Description:</b><br><br>
+      <span class="multiline-text textbox-word-break">{{ specialRequestService.specialTicketRequests[selectedRequestIndex].RequestDescription }}</span>
+    </p>
+    <p class="details-modal-entry">
+      <b class="add-info-title">Requested By:</b><br>
+      {{ specialRequestService.specialTicketRequests[selectedRequestIndex].RequestedBy }}
+    </p>
+    <p class="details-modal-entry">
+      <b class="add-info-title">Request Date:</b><br>
+      {{ specialRequestService.specialTicketRequests[selectedRequestIndex].RequestDateTime.date.replace(" ", "T").split(".")[0] | date:'EEEE, M/d/y, h:mm a' }}
+    </p>
+  </div>
+  <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="requestDetailsModal.close()">Close</button>
+    </div>
+</ng-template>

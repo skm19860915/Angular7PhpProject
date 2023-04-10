@@ -1,0 +1,13 @@
+a {
+  color: rgb(117, 117, 117);
+}
+
+.main-content {
+  padding-top: 160px;
+  padding-bottom: 20px;
+  font-size: 90%;
+}
+
+.modal-dialog {
+  max-width: unset;
+}

@@ -1,0 +1,102 @@
+.status-label-approved {
+  font-weight: bold;
+  color: #06b19f;
+  font-size: 110%;
+}
+
+.status-label-not-approved {
+  font-weight: bold;
+  font-size: 110%;
+  color: #d23141;
+}
+
+.status-label-pending {
+  font-weight: bold;
+  font-size: 110%;
+  color: #efb509;
+}
+
+.table-requests {
+  margin-top: 20px;
+}
+
+.modal-dialog {
+  max-width: 500px;
+  margin-top: 0;
+}
+
+.badge {
+  margin-bottom: 20px;
+}
+
+/* Mobiles */
+@media(max-width: 767px) {
+
+  .main-content {
+    padding: 85px 0 13px 15px;
+  }
+
+  .header-row {
+    padding: 0 15px;
+  }
+
+  .btn-mobile-margin {
+    margin-left: 10px;
+  }
+
+  .mobile-ticket-table-sel {
+    background-color: rgb(211, 211, 211);
+  }
+
+  .details-modal-entry {
+    margin-bottom: 15px;
+  }
+
+  .mobile-action-btn {
+    position: fixed;
+    bottom: 45px;
+    right: 0px;
+    z-index: 900;
+    background-color: #c1c1c1;
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+    padding: 10px;
+  }
+
+  .modal-title {
+    font-size: 110%;
+  }
+
+  .title-container {
+    max-width: 89%;
+  }
+
+  .add-req-btn {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+/* Tablets */
+@media(min-width: 768px) and (max-width: 1199px) {
+  
+  .main-content {
+    padding: 180px 15px 30px 15px;
+    font-size: 90%;
+    max-width: 1000px;
+  }
+
+  .header-row {
+    padding: 0 15px;
+  }
+}
+
+/* Desktops */
+@media(min-width: 1200px) {
+  
+  .main-content {
+    padding: 180px 0 30px 15px;
+    font-size: 90%;
+    max-width: 1000px;
+  }
+}

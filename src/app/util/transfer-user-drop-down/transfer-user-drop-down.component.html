@@ -1,0 +1,36 @@
+<div 
+  ngbDropdown 
+  (clickOutside)="filterOptionsVal = ''; dropDown.close()" 
+  (openChange)="dropDownOpenChange($event)" 
+  #dropDown='ngbDropdown' 
+  [autoClose]="false"
+  placement="{{ menuPlacement?(menuPlacement) : 'bottom' }}"
+>
+  <button class="btn btn-transfer-user-sel" [ngClass]="{'btn-transfer-user-sel-active': dropDown.isOpen(), 'btn-sm': smallBtn}" ngbDropdownToggle>
+    <span class="sel-val-label">
+      {{ transferUser ? transferUser.userName : 'Select User' }}
+    </span>
+  </button>
+  <div ngbDropdownMenu class="dropdown" [ngClass]="{'dropdown-centered-on-screen': dropdownCenteredOnScreen}">
+    <input 
+      #searchInput
+      class="user-sel-search-bar"
+      maxlength="40" 
+      type="text" 
+      [(ngModel)]="filterOptionsVal" 
+      #ctrl="ngModel"
+      placeholder="Search" 
+    >
+    <div class="dropdown-items">
+      <button 
+        class="dropdown-item" 
+        *ngFor="let user of userService.activeUsers | objectFilter: 'userName' : filterOptionsVal?(filterOptionsVal) : null : 'CONTAINS'"
+        (click)="selectOption(user); dropDown.close()" 
+        [ngClass]="{'dropdown-item-active' : transferUser === user}"
+        id="transfer_user_{{ user.userAccount }}"
+      >
+        {{ user.userName }}
+      </button>  
+    </div>
+  </div>
+</div>

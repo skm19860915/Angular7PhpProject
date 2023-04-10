@@ -1,0 +1,151 @@
+<i *ngIf="userService.curUser.userAccount!=userService.selUser.userAccount" class="d-block d-md-none fa fa-user-circle-o sel-user-indicator"></i>
+<nav class="navbar navbar-light bg-custom justify-content-between fixed-top top-nav-bar">
+  <a class="navbar-brand" routerLink="overview">
+    <img src="./assets/firm_logo.jpg" />
+    {{ appName }}
+  </a>
+  <div *ngIf="userService.users.length>0" class="header-user-container d-none d-md-block">
+    <a class="user-profile-link float-right">
+      {{ userService.curUser.userAccount }}
+      <ng-container *ngFor="let user of userService.users">
+        <ng-container *ngIf="user.userAccount==userService.curUser.userAccount">({{ user.userName }})</ng-container>
+      </ng-container>
+    </a>
+    <br>
+    <small>
+      <div [ngStyle]="{'display': this.router.url.includes('/administration') || this.router.url.includes('/system') ? 'none' : 'block'}" class="user-selection-row">
+        <div class="combobox-container">
+          <app-user-sel-drop-down
+            #userSelection
+            [dropDownPlacement]="'bottom-right'">
+          </app-user-sel-drop-down>
+        </div>
+      </div>
+    </small>
+  </div>
+</nav>
+<nav class="navbar navbar-expand-md navbar-dark bg-light fixed-top second-top-navbar justify-content-between">
+  <a class="navbar-brand float-left d-block d-md-none" routerLink="overview">
+    <img src="./assets/firm_logo.jpg" />
+    {{ appName }}
+  </a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarMainMenu, #navbarUserMenu" aria-controls="navbarMainMenu" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <!-- Mobile -->
+  <div class="d-block d-md-none mobile-second-navbar">
+    <div class="collapse navbar-collapse navbar-user-menu" id="navbarUserMenu">
+        <small>Logged in as:</small><br>
+      <b><a class="user-profile-link">
+        {{ userService.curUser.userAccount }}
+        <ng-container *ngFor="let user of userService.users">
+          <ng-container *ngIf="user.userAccount==userService.curUser.userAccount">({{ user.userName }})</ng-container>
+        </ng-container>
+      </a></b>
+      <br>
+      <br>
+      <small>
+        <div [ngStyle]="{'display': this.router.url.includes('/administration') ? 'none' : 'block'}" class="user-selection-row">
+          <div class="display-inline-block">
+            <label class="view-request-label">View/Request as:</label>
+          </div>
+          <div class="float-left">
+            <app-user-sel-drop-down
+              #userSelectionMobile
+              [dropDownPlacement]="'bottom-left'"
+              [showLabel]="false">
+            </app-user-sel-drop-down>
+          </div>
+        </div>
+      </small>
+      <br>
+    </div>
+  </div>
+  <div class="collapse navbar-collapse justify-content-center main-menu" id="navbarMainMenu">
+    <div class="navbar-nav">
+      <a class="navbar-item nav-link navbar-item-light" routerLink="overview" [routerLinkActive]="'active'">View Events And Request Tickets</a>
+      <a class="navbar-item nav-link navbar-item-light d-none d-lg-block" routerLink="requests" [routerLinkActive]="'active'">My Ticket Requests</a>
+      <a class="navbar-item nav-link navbar-item-light d-block d-lg-none" routerLink="requests" [routerLinkActive]="'active'">My Requests</a>
+      <a class="navbar-item nav-link navbar-item-light d-none d-lg-block" routerLink="special-requests" [routerLinkActive]="'active'">Special Ticket Requests</a>
+      <a class="navbar-item nav-link navbar-item-light d-block d-lg-none" routerLink="special-requests" [routerLinkActive]="'active'">Special Requests</a>
+      <a class="navbar-item nav-link navbar-item-light d-none d-lg-block" routerLink="assignments" [routerLinkActive]="'active'">Manage My Tickets</a>
+      <a class="navbar-item nav-link navbar-item-light d-block d-lg-none" routerLink="assignments" [routerLinkActive]="'active'">My Tickets</a>
+      <a *ngIf="viewPermitted('administration')" class="d-none d-xl-block navbar-item nav-link navbar-item-light" routerLink="administration" [routerLinkActive]="'active'">Administration</a>
+      <a *ngIf="viewPermitted('system')" class="d-none d-xl-block navbar-item nav-link navbar-item-light" routerLink="system" [routerLinkActive]="'active'">System</a>
+    </div>
+  </div>
+</nav>
+<router-outlet></router-outlet>
+<div class="footer fixed-bottom">
+  <div class="row justify-content-between">
+      <div class="col-xs-1 bottom-links">
+        <small>
+          <a href="http://intranet.walterhav.com/PDF/EventTicketingSystem_CurrentUsersGuide.pdf" target="_blank">
+            <span class="d-block d-sm-none">
+              <i class="fa fa-question-circle bottom-links-icon-xs" aria-hidden="true"></i>
+            </span>
+            <span class="d-none d-sm-block">
+              <i class="fa fa-book" aria-hidden="true"></i>&nbsp;User Guide
+            </span>
+          </a>
+        </small>
+      </div>
+      <div class="col-xs-1 bottom-links">
+        <small>
+          <span class="d-none d-sm-block">
+            <b>Cavs/Monsters Suite:</b>&nbsp;&nbsp;&nbsp;<a href="http://intranet.walterhav.com/PDF/EventTicketingSystem_CavsSuiteFoodMenu.pdf" target="_blank"><i class="fa fa-cutlery" aria-hidden="true"></i>&nbsp;Food Menu</a>
+            &nbsp;
+            <a href="http://intranet.walterhav.com/PDF/EventTicketingSystem_CavsSuiteFoodOrderForm.pdf" target="_blank"><i class="fa fa-pencil-square-o" aria-hidden="true"></i>&nbsp;Food Order Form</a>
+          </span>
+          <span class="d-block d-sm-none">
+            Cavs/Monsters Suite:&nbsp;&nbsp;&nbsp;<a href="http://intranet.walterhav.com/PDF/EventTicketingSystem_CavsSuiteFoodMenu.pdf" target="_blank"><i class="fa fa-cutlery bottom-links-icon-xs" aria-hidden="true"></i></a>
+            &nbsp;&nbsp;
+            <a href="http://intranet.walterhav.com/PDF/EventTicketingSystem_CavsSuiteFoodOrderForm.pdf" target="_blank"><i class="fa fa-pencil-square-o bottom-links-icon-xs" aria-hidden="true"></i></a>
+          </span>
+        </small>
+      </div>
+      <div class="col d-none d-xl-block">
+        <small>
+          <b>Roles: </b>
+          <span *ngIf="userService.curUser.memberOfEveryone==true">Everyone&nbsp;</span>
+          <span *ngIf="userService.curUser.memberOfAssociate==true">| Associate&nbsp;</span>
+          <span *ngIf="userService.curUser.memberOfPartner==true">| Partner&nbsp;</span>
+          <span *ngIf="userService.curUser.memberOfSectionHead==true">| Section Head&nbsp;</span>
+          <span *ngIf="userService.curUser.memberOfTicketAdministration==true">| Ticket Administration&nbsp;</span>
+          <span *ngIf="userService.curUser.memberOfSystemAdministration==true">| System Administration</span>
+        </small>
+      </div>
+      <div class="col-xs-1 d-none d-sm-block"><small>Build: {{ appVersion }}</small></div>
+  </div>
+</div>
+<!-- Entry Page Modal -->
+<div id="overlay" *ngIf="showEntryModal">
+  <div id="overlay-text">
+      <img class="imageWHLogo" src="./assets/WH_logo.png" />
+      <h2 class="d-none d-md-block">Welcome to our Event Ticketing System</h2>
+      <h3 class="d-block d-md-none">Welcome to our Event Ticketing System</h3>
+      <br>
+      <p>You are logged in as:</p>
+      <p><small><b>{{ userService.curUser.userAccount }}</b></small></p>
+      <div class="d-none d-md-block">
+        <br>
+        <p>Your current Ticketing System Group Memberships:</p>
+        <p></p>
+        <small>
+          <b *ngIf="userService.curUser.memberOfEveryone==true">Everyone&nbsp;&nbsp;</b>
+          <b *ngIf="userService.curUser.memberOfAssociate==true">Associate&nbsp;&nbsp;</b>
+          <b *ngIf="userService.curUser.memberOfPartner==true">Partner&nbsp;&nbsp;</b>
+          <b *ngIf="userService.curUser.memberOfSectionHead==true">Section Head&nbsp;&nbsp;</b>
+          <b *ngIf="userService.curUser.memberOfTicketAdministration==true">Ticket Administration&nbsp;&nbsp;</b>
+          <b *ngIf="userService.curUser.memberOfSystemAdministration==true">System Administration</b>
+        </small>
+        <br>
+      </div>
+      <br>
+      <ng-container *ngIf="!userService.curUser.userAccount"><i class="fa fa-circle-o-notch fa-spin"></i>&nbsp; Logging in ...</ng-container>
+      <button *ngIf="userService.curUser.userAccount" class="btn btn-primary" (click)="userService.curUser.userAccount && showEntryModal = false">
+        <i class="fa fa-sign-in"></i>&nbsp; Enter
+      </button>
+  </div>
+</div>
+<app-loader></app-loader>

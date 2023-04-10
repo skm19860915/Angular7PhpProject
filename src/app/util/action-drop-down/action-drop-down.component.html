@@ -1,0 +1,15 @@
+<div #dropDownObj="ngbDropdown" *ngIf="selectionCount > 0" ngbDropdown class="d-inline-block" placement="bottom-right">
+  <button class="btn btn-sm" ngbDropdownToggle>
+    <i class="fa fa-bolt"></i>
+    Action on <b>{{ selectionCount }}</b>
+    {{ selectionCount>1?(selectedItemNamePlu): selectedItemNameSin }}
+  </button>
+  <div ngbDropdownMenu class="dropdown">
+    <button ngbDropdownItem class="dropdown-item" *ngFor="let action of actionList"
+      (click)="executeAction(action); dropDownObj.close()">
+      {{ action.actionText }}
+    </button>
+  </div>
+  <i *ngIf="selectionCount > 0" class="fa fa-times" (click)="clearSelection()">
+  </i>
+</div>

@@ -1,0 +1,364 @@
+body {
+  overflow-x: hidden;
+}
+
+body .modal-open {
+  position: fixed;
+}
+
+.textbox-word-break {
+  word-break: break-all;
+}
+
+.table-col-h-sm {
+  font-size: 13px;
+}
+
+.btn-custom-details {
+  border: 1px solid #d6d6d6;
+  padding: .375rem .75rem;
+  color: #6c7589;
+  font-size: 1rem;
+  max-width: 380px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 35px;
+  position: relative;
+}
+
+.modal-event-info p {
+  margin-bottom: 0.5rem;
+}
+
+.btn-custom-details-sm {
+  font-size: 0.9rem;
+  padding-right: 32px;
+}
+
+.btn-custom-details.dropdown-toggle::after {
+  position: absolute;
+  right: 12px;
+  top: 17px;
+}
+
+.btn-info {
+  background-color: #004278;
+  border-color: #004278;
+}
+
+.btn-info:hover {
+  background-color: #004278dc;
+  border-color: #004278dc;
+}
+
+.dropdown-window-adjusted {
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.cell-icon {
+  font-size: 150%;
+}
+
+.cell-icon-sm {
+  font-size: 130%;
+}
+
+.clickable-icon {
+  cursor: pointer;
+}
+
+.clickable-icon:hover {
+  opacity: 0.6;
+}
+
+.multiline-text {
+  white-space: pre-wrap;
+}
+
+.user-table-action {
+  cursor: pointer;
+}
+
+.prefill-badge {
+  margin: 10px 0 10px 0;
+  cursor: pointer;
+  background-color: #1e7c5b;
+}
+
+.inactive {
+  opacity: 0.3;
+}
+
+.form-margin-top {
+  margin-top: 1rem;
+}
+
+/* covers xs and sm */
+@media(max-width: 767px) {
+
+  .main-content {
+    padding: 60px 0 60px 0;
+  }
+
+  .mobile-ticket-table-sel {
+    background-color: #eeeeee;
+  }
+
+  .fa-disabled {
+    opacity: 0.8;
+    color: #4c535a;
+  }
+
+  .table-header-action-item {
+    padding-left: 16px !important;
+  }
+}
+
+/* covers only md+ */
+@media(min-width: 768px) {
+
+  .table-header-action-item {
+    padding-left: 14px !important;
+  }
+
+  .selected-all-table-icon:hover {
+    color: #646568;
+  }
+
+  .selected-all-table-icon:active {
+    color: #494a4d;
+  }
+}
+
+.btn-margin-left-10 {
+  margin-left: 10px;
+}
+
+.btn-margin-left-15 {
+  margin-left: 15px;
+}
+
+.btn-margin-right-15 {
+  margin-right: 15px;
+}
+
+.table-content-sm {
+    font-size: 85%;
+}
+
+.row-event-info {
+  margin-top: 10px;
+}
+
+.row-request-info, .request-info-seat {
+  margin-top: 10px;
+}
+
+.btn-primary {
+  /* background-color: #1e7c5b !important;
+  border-color: #1e7c5b !important; */
+  background-color: #004278 !important;
+  border-color: #004278 !important;
+}
+
+.row-no-margin {
+  margin: 0;
+}
+
+.btn-primary:hover {
+  /* background-color: #1b694e !important;
+  border-color: #1b694e !important; */
+  background-color: #004278dc !important;
+  border-color: #004278dc !important;
+}
+
+.ng-touched.ng-invalid:not(form), .ng-invalid:not(form), .invalid  {
+  border-left: 5px solid #a94442;
+}
+
+.ng-valid[required], .ng-valid.required, .valid  {
+  /* border-left: 5px solid #006140 !important; */
+  border-left: 5px solid #004278 !important;
+}
+
+.breadcrumb {
+  background-color: transparent;
+  font-size: 120%;
+  padding: .75rem 0;
+  margin-bottom: 0;
+}
+
+.cell-centered {
+  text-align: center;
+  vertical-align: middle !important;
+}
+
+.cell-align-right {
+  text-align: right;
+}
+
+.selected-table-icon {
+  font-size: 200%;
+  /* color: #006140; */
+  color: #004278;
+}
+
+.selected-all-table-icon {
+  font-size: 150%;
+  color: #a3a6ab;
+  cursor: pointer;
+  vertical-align: bottom;
+  align-self: center;
+}
+
+.selected-all-table-icon {
+  font-size: 150%;
+  color: #a3a6ab;
+  cursor: pointer;
+  vertical-align: bottom;
+  align-self: center;
+}
+
+.fa-disabled {
+  opacity: 0.5;
+  color: #4c535a;
+}
+
+.fa-approved {
+  opacity: 0.8;
+  /* color: #006140; */
+  color: #004278;
+}
+
+.fa-cancelled {
+  opacity: 0.8;
+  /* color: #006140; */
+  color: #004278;
+}
+
+.fa-pending {
+  opacity: 0.8;
+  /* color: #006140; */
+  color: #004278;
+}
+
+/**
+ * Tooltip Styles
+ */
+
+/* Add this attribute to the element that needs a tooltip */
+[data-tooltip] {
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+}
+
+/* Hide the tooltip content by default
+[data-tooltip]:before,
+[data-tooltip]:after {
+  visibility: hidden;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+  filter: progid: DXImageTransform.Microsoft.Alpha(Opacity=0);
+  opacity: 0;
+  pointer-events: none;
+}*/
+
+/* Position tooltip above the element */
+[data-tooltip]:before {
+  position: absolute;
+  bottom: 150%;
+  left: 50%;
+  margin-bottom: 5px;
+  margin-left: -80px;
+  padding: 7px;
+  width: 160px;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  background-color: #000;
+  background-color: hsla(0, 0%, 20%, 0.9);
+  color: #fff;
+  content: attr(data-tooltip);
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+/* Triangle hack to make tooltip look like a speech bubble */
+[data-tooltip]:after {
+  position: absolute;
+  bottom: 150%;
+  left: 50%;
+  margin-left: -5px;
+  width: 0;
+  border-top: 5px solid #000;
+  border-top: 5px solid hsla(0, 0%, 20%, 0.9);
+  border-right: 5px solid transparent;
+  border-left: 5px solid transparent;
+  content: " ";
+  font-size: 0;
+  line-height: 0;
+}
+
+/* Show tooltip content on hover */
+[data-tooltip]:hover:before,
+[data-tooltip]:hover:after {
+  visibility: visible;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";
+  filter: progid: DXImageTransform.Microsoft.Alpha(Opacity=100);
+  opacity: 1;
+}
+
+/* Swal Modals Custom Styles */
+
+.swal-btn-yes {
+  /* background-color: #1e7c5b !important; */
+  background-color: #004278 !important;
+}
+
+.swal-button:not([disabled]):hover {
+  /* background-color: #1b694e !important; */
+  background-color: #004278dc !important;
+}
+
+.swal-btn-no:not([disabled]):hover {
+  background-color: #747272 !important;
+}
+
+.swal-button {
+  background-color: #8a8a8a;
+  color: #fff;
+}
+
+.swal-centered-buttons, .swal-footer {
+  text-align: center !important;
+}
+
+.swal-button--cancel:not([disabled]):hover {
+  background-color: #606161 !important;
+}
+
+.swal-icon--success__ring {
+  border: 4px solid hsla(174, 100%, 28%, 0.2);
+}
+
+.swal-icon--success__line {
+  background-color: #50b9ae;
+}
+
+.swal-text {
+  font-size: 18px;
+  text-align: center;
+  line-height: 160%;
+}
+.ng-autocomplete .autocomplete-container .suggestions-container ul {
+  padding: 0;
+  margin: 0;
+  max-height: 130px;
+  overflow-y: auto;
+}
+
+.client-matter-modal .modal-dialog .modal-content{
+  width: 482px !important;
+}
